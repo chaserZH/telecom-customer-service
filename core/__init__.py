@@ -19,6 +19,7 @@ from .nlu import (
 )
 
 from .chatbot_nlu import TelecomChatbotNlu
+from .chatbot_dst import TelecomChatbotDst
 
 # 定义通过 from core import * 可以导入的内容
 __all__ = [
@@ -28,5 +29,6 @@ __all__ = [
     'get_function_by_name', # 根据名称获取函数
     'FunctionCategory',      # 函数分类枚举
     'get_required_params',
-    'TelecomChatbotNlu'
+    'TelecomChatbotNlu',
+    'TelecomChatbotDst'
 ]

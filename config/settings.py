@@ -63,12 +63,12 @@ class Settings(BaseSettings):
         """数据库连接URL"""
         return f"mysql+pymysql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
 
-    # @property
-    # def redis_url(self) -> str:
-    #     """Redis连接URL"""
-    #     if self.REDIS_PASSWORD:
-    #         return f"redis://:{self.REDIS_PASSWORD}@{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
-    #     return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
+    @property
+    def redis_url(self) -> str:
+        """Redis连接URL"""
+        if self.REDIS_PASSWORD:
+            return f"redis://:{self.REDIS_PASSWORD}@{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
+        return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
 
     class Config:
         env_file = ".env"
@@ -76,4 +76,3 @@ class Settings(BaseSettings):
         # 允许额外的字段（兼容TOMMY_DEEPSEEK_API_KEY这样的命名）
         extra = "ignore"
 
-settings = Settings()
