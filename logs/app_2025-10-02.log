@@ -1,0 +1,52 @@
+2025-10-02 10:39:03.104 | ERROR    | database.db_manager:_initialize:40 - 数据库连接初始化失败: No module named 'pymysql'
+2025-10-02 10:41:26.609 | ERROR    | database.db_manager:_initialize:40 - 数据库连接初始化失败: No module named 'pymysql'
+2025-10-02 10:43:46.161 | ERROR    | database.db_manager:_initialize:40 - 数据库连接初始化失败: No module named 'pymysql'
+2025-10-02 10:57:48.680 | INFO     | database.db_manager:_initialize:38 - 数据库连接初始化成功
+2025-10-02 10:57:48.682 | INFO     | executor.db_executor:__init__:16 - 数据库执行器初始化完成
+2025-10-02 10:58:56.290 | INFO     | database.db_manager:_initialize:38 - 数据库连接初始化成功
+2025-10-02 10:58:56.296 | INFO     | executor.db_executor:__init__:16 - 数据库执行器初始化完成
+2025-10-02 11:00:27.504 | INFO     | database.db_manager:_initialize:38 - 数据库连接初始化成功
+2025-10-02 11:00:27.516 | INFO     | executor.db_executor:__init__:16 - 数据库执行器初始化完成
+2025-10-02 11:00:59.068 | INFO     | database.db_manager:_initialize:38 - 数据库连接初始化成功
+2025-10-02 11:00:59.070 | INFO     | executor.db_executor:__init__:16 - 数据库执行器初始化完成
+2025-10-02 11:01:37.559 | INFO     | database.db_manager:_initialize:38 - 数据库连接初始化成功
+2025-10-02 11:01:37.564 | INFO     | executor.db_executor:__init__:16 - 数据库执行器初始化完成
+2025-10-02 11:21:22.279 | INFO     | database.db_manager:_initialize:38 - 数据库连接初始化成功
+2025-10-02 11:21:23.586 | INFO     | core.nlu.nlu_engine:__init__:50 - ✓ NLU引擎初始化成功: DeepSeek (deepseek-chat)
+2025-10-02 11:21:34.208 | INFO     | core.nlu.nlu_engine:understand:80 - [test_001] 开始NLU理解: 有100块以内的套餐吗
+2025-10-02 11:21:57.101 | DEBUG    | core.nlu.nlu_engine:understand:85 - [test_001] 预处理后: 有100元以内的套餐吗
+2025-10-02 11:23:39.630 | INFO     | core.nlu.nlu_engine:understand:110 - [test_001] NLU完成: intent=package_query
+2025-10-02 11:35:52.765 | INFO     | database.db_manager:_initialize:38 - 数据库连接初始化成功
+2025-10-02 11:35:53.717 | INFO     | core.nlu.nlu_engine:__init__:50 - ✓ NLU引擎初始化成功: DeepSeek (deepseek-chat)
+2025-10-02 11:35:56.402 | INFO     | core.nlu.nlu_engine:understand:80 - [test_001] 开始NLU理解: 有100块以内的套餐吗
+2025-10-02 11:35:59.165 | DEBUG    | core.nlu.nlu_engine:understand:85 - [test_001] 预处理后: 有100元以内的套餐吗
+2025-10-02 11:37:17.693 | INFO     | core.nlu.nlu_engine:understand:110 - [test_001] NLU完成: intent=package_query
+2025-10-02 11:48:05.994 | INFO     | database.db_manager:_initialize:38 - 数据库连接初始化成功
+2025-10-02 11:48:06.974 | INFO     | core.nlu.nlu_engine:__init__:50 - ✓ NLU引擎初始化成功: DeepSeek (deepseek-chat)
+2025-10-02 11:48:10.040 | INFO     | core.nlu.nlu_engine:understand:80 - [test_001] 开始NLU理解: 有100块以内的套餐吗
+2025-10-02 11:48:12.141 | DEBUG    | core.nlu.nlu_engine:understand:85 - [test_001] 预处理后: 有100元以内的套餐吗
+2025-10-02 11:49:20.723 | INFO     | core.nlu.nlu_engine:understand:110 - [test_001] NLU完成: intent=query_packages
+2025-10-02 11:49:21.468 | INFO     | tests.test_nlu:test_price_query:24 - 返回结果: NLUResult(intent='query_packages', function_name='query_packages', parameters={'price_max': 100}, confidence=0.9, requires_clarification=False, clarification_message=None, missing_slots=[], raw_response=None)
+2025-10-02 11:51:25.227 | INFO     | database.db_manager:_initialize:38 - 数据库连接初始化成功
+2025-10-02 11:51:26.287 | INFO     | core.nlu.nlu_engine:__init__:50 - ✓ NLU引擎初始化成功: DeepSeek (deepseek-chat)
+2025-10-02 11:51:26.288 | INFO     | executor.db_executor:__init__:16 - 数据库执行器初始化完成
+2025-10-02 11:51:26.288 | INFO     | core.chatbot_nlu:__init__:21 - 第一阶段对话系统初始化完成
+2025-10-02 11:51:26.289 | INFO     | core.chatbot_nlu:chat:44 - [integration_test_001] 收到用户输入: 有100元以内的套餐吗
+2025-10-02 11:51:45.944 | INFO     | core.nlu.nlu_engine:understand:80 - [integration_test_001] 开始NLU理解: 有100元以内的套餐吗
+2025-10-02 11:51:50.609 | DEBUG    | core.nlu.nlu_engine:understand:85 - [integration_test_001] 预处理后: 有100元以内的套餐吗
+2025-10-02 11:52:03.696 | INFO     | core.nlu.nlu_engine:understand:110 - [integration_test_001] NLU完成: intent=query_packages
+2025-10-02 11:52:58.675 | INFO     | executor.db_executor:execute_function:29 - 执行Function: query_packages, 参数: {'price_max': 100, 'sort_by': 'price_asc'}
+2025-10-02 11:53:38.000 | INFO     | executor.db_executor:execute_function:50 - Function执行成功: query_packages
+2025-10-02 11:54:47.486 | INFO     | core.chatbot_nlu:_log_conversation:214 - [integration_test_001] 对话完成 | 意图: query_packages | 函数: query_packages | 耗时: 201196ms
+2025-10-02 11:55:39.703 | INFO     | database.db_manager:_initialize:38 - 数据库连接初始化成功
+2025-10-02 11:55:40.259 | INFO     | core.nlu.nlu_engine:__init__:50 - ✓ NLU引擎初始化成功: DeepSeek (deepseek-chat)
+2025-10-02 11:55:40.259 | INFO     | executor.db_executor:__init__:16 - 数据库执行器初始化完成
+2025-10-02 11:55:40.259 | INFO     | core.chatbot_nlu:__init__:21 - 第一阶段对话系统初始化完成
+2025-10-02 11:55:40.259 | INFO     | core.chatbot_nlu:chat:44 - [integration_test_001] 收到用户输入: 有100元以内的套餐吗
+2025-10-02 11:55:40.259 | INFO     | core.nlu.nlu_engine:understand:80 - [integration_test_001] 开始NLU理解: 有100元以内的套餐吗
+2025-10-02 11:55:40.259 | DEBUG    | core.nlu.nlu_engine:understand:85 - [integration_test_001] 预处理后: 有100元以内的套餐吗
+2025-10-02 11:55:43.056 | INFO     | core.nlu.nlu_engine:understand:110 - [integration_test_001] NLU完成: intent=query_packages
+2025-10-02 11:55:43.056 | INFO     | executor.db_executor:execute_function:29 - 执行Function: query_packages, 参数: {'price_max': 100, 'sort_by': 'price_asc'}
+2025-10-02 11:55:43.103 | INFO     | executor.db_executor:execute_function:50 - Function执行成功: query_packages
+2025-10-02 11:55:43.103 | INFO     | core.chatbot_nlu:_log_conversation:214 - [integration_test_001] 对话完成 | 意图: query_packages | 函数: query_packages | 耗时: 2844ms
+2025-10-02 11:55:43.103 | INFO     | tests.test_integration:test_complete_conversation:26 - 返回结果: {'session_id': 'integration_test_001', 'response': '为您找到 1 个合适的套餐:\n\n【经济套餐】\n  💰 月费: 50.0元\n  📊 流量: 10GB/月\n  📞 通话: 100分钟/月\n  👥 适用: 无限制\n  📝 适合轻度上网用户,性价比高,包含10GB流量和100分钟通话\n\n如需办理或了解详情,请告诉我套餐名称和您的手机号码。', 'intent': 'query_packages', 'function': 'query_packages', 'parameters': {'price_max': 100, 'sort_by': 'price_asc'}, 'data': {'success': True, 'data': [{'id': 1, 'name': '经济套餐', 'data_gb': 10, 'voice_minutes': 100, 'price': 50.0, 'target_user': '无限制', 'description': '适合轻度上网用户,性价比高,包含10GB流量和100分钟通话'}], 'count': 1}, 'requires_input': False, 'timestamp': '2025-10-02T11:55:43.103414'}
