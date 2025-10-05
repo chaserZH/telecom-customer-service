@@ -1,2 +1,3153 @@
-# telecom-customer-service
-电信ai客服系统
+# 电信套餐AI智能客服系统 - NLU模块完整设计文档
+
+
+
+## 项目概述
+
+### 1.1 业务场景
+
+**业务场景**：办理流量包的智能客服
+
+**核心业务**: 
+
+- 查询套餐信息
+- 推荐合适套餐
+- 办理套餐变更
+- 查询使用情况
+
+
+
+**可用套餐**：
+
+| 名称     | 流量(G/月) | 价格(元/月) | 适用人群 |
+| -------- | ---------- | ----------- | -------- |
+| 经济套餐 | 10         | 50          | 无限制   |
+| 畅游套餐 | 100        | 180         | 无限制   |
+| 无限套餐 | 1000       | 300         | 无限制   |
+| 校园套餐 | 200        | 150         | 在校生   |
+
+
+
+### 1.2 项目目标
+
+1. 理解用户自然语言查询套餐需求
+2. 支持多轮对话，智能追问缺失信息
+3. 精准推荐符合用户需求的套餐
+4. 支持套餐办理、查询使用情况等业务
+5. 预留RAG接口，未来可接入业务知识库
+
+
+
+### 1.3 整体模块图
+
+![himg](https://chaser-zh-bucket.oss-cn-shenzhen.aliyuncs.com//uPic/oPeZ9X.png)
+
+
+
+### 1.4 分阶段实施计划
+
+| 阶段         | 时间      | 目标                  | 状态       |
+| ------------ | --------- | --------------------- | ---------- |
+| **第一阶段** | Week 1-2  | NLU模块实现           | ✅ 当前阶段 |
+| 第二阶段     | Week 3-4  | DST模块(对话状态跟踪) | 📋 规划中   |
+| 第三阶段     | Week 5-6  | Policy + NLG模块      | 📋 规划中   |
+| 第四阶段     | Week 7-10 | Web系统 + AI Agent    | 📋 规划中   |
+
+
+
+\---
+
+## 整体架构
+
+### 2.1 系统分层架构
+
+```
+┌─────────────────────────────────────────────────────┐
+│                   用户交互层                          │
+│            (Web/App/微信/语音接口)                    │
+└─────────────────────────────────────────────────────┘
+                         ↓
+┌─────────────────────────────────────────────────────┐
+│                  对话管理层                           │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐         │
+│  │ 会话管理  │  │ 上下文   │  │ 多轮对话 │         │
+│  │ Session  │  │ Context  │  │ 状态机   │         │
+│  └──────────┘  └──────────┘  └──────────┘         │
+└─────────────────────────────────────────────────────┘
+                         ↓
+┌─────────────────────────────────────────────────────┐
+│              🎯 NLU理解层 (第一阶段核心)              │
+│  ┌────────────────────────────────────────────┐    │
+│  │         大模型 Function Calling             │    │
+│  │  - 意图识别 (Intent Classification)         │    │
+│  │  - 实体抽取 (Entity Extraction)             │    │
+│  │  - 参数填充 (Slot Filling)                  │    │
+│  └────────────────────────────────────────────┘    │
+│                         ↓                           │
+│  ┌────────────────────────────────────────────┐    │
+│  │         Function Router (预留RAG接口)       │    │
+│  │  - 套餐查询 → DB Query                      │    │
+│  │  - 业务咨询 → RAG (预留)                    │    │
+│  │  - 其他服务 → API                           │    │
+│  └────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────┘
+                         ↓
+┌─────────────────────────────────────────────────────┐
+│                  执行层                               │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐         │
+│  │ 数据库   │  │ RAG引擎  │  │ 外部API  │         │
+│  │ MySQL    │  │ (预留)   │  │          │         │
+│  └──────────┘  └──────────┘  └──────────┘         │
+└─────────────────────────────────────────────────────┘
+                         ↓
+┌─────────────────────────────────────────────────────┐
+│                  响应生成层                           │
+│       NLG (自然语言生成) + TTS (可选)                 │
+└─────────────────────────────────────────────────────┘
+```
+
+
+
+### 2.2 对话系统基本模块
+
+我们的系统包含如下模块：
+
+```
+   ↓
+[ASR] 语音识别 (可选，第四阶段)
+   ↓
+[NLU] 语义理解 ⭐ 第一阶段核心
+   ↓
+[DST] 状态跟踪 (第二阶段)
+   ↓
+[Policy] 对话策略 (第三阶段)
+   ↓
+[NLG] 语言生成 (第三阶段)
+   ↓
+[TTS] 语音合成 (可选，第四阶段)
+   ↓
+系统输出
+```
+
+**各模块职责**：
+
+- **NLU (Natural Language Understanding)**: 理解用户意图和提取关键信息
+- **DST (Dialog State Tracking)**: 跟踪对话状态，管理多轮对话
+- **Policy**: 决定系统下一步动作(查询、推荐、确认等)
+- **NLG (Natural Language Generation)**: 生成自然流畅的回复
+- **DB/API**: 查询数据库或调用外部API
+
+
+
+### 2.3 数据流转示意
+
+```
+用户: "有100块以内的套餐吗"
+   ↓
+[NLU] 解析
+   - Intent: query_packages
+   - Parameters: {price_max: 100, sort_by: "price_asc"}
+   ↓
+[DST] 状态更新 (第二阶段)
+   - 保存意图和参数
+   ↓
+[Policy] 决策 (第三阶段)
+   - 决定: 执行查询
+   ↓
+[DB] 执行查询
+   - SELECT * FROM packages WHERE price <= 100
+   ↓
+[NLG] 生成回复 (第三阶段)
+   - "为您找到1个套餐: 经济套餐..."
+   ↓
+返回用户
+```
+
+
+
+---
+
+## NLU模块详细设计
+
+### 3.1 模块概述
+
+***\*模块名称\****: Natural Language Understanding (NLU)  
+
+***\*开发周期\****: 2周  
+
+***\*核心目标\****: 将用户自然语言输入转换为结构化参数，用于数据库查询
+
+
+
+### 3.2 功能需求
+
+#### 3.2.1 意图识别**(Intent Classification)**
+
+| 意图名称                | 描述         | 示例                       |
+| ----------------------- | ------------ | -------------------------- |
+| `query_packages`        | 查询套餐列表 | "有便宜的套餐吗"           |
+| `query_current_package` | 查询当前套餐 | "我现在用的什么套餐"       |
+| `query_package_detail`  | 查询套餐详情 | "畅游套餐有什么内容"       |
+| `change_package`        | 办理套餐变更 | "我要办理经济套餐"         |
+| `query_usage`           | 查询使用情况 | "我用了多少流量"           |
+| `business_consultation` | 业务咨询     | "有什么优惠活动" (预留RAG) |
+
+
+
+#### 3.2.2 实体抽取（Entity Extraction）
+
+从用户输入中提取关键信息：
+
+| 实体类型 | 示例输入      | 提取结果                |
+| -------- | ------------- | ----------------------- |
+| 价格范围 | "100块以内"   | `price_max: 100`        |
+| 流量需求 | "至少50G"     | `data_min: 50`          |
+| 排序偏好 | "便宜点的"    | `sort_by: "price_asc"`  |
+| 人群限制 | "学生套餐"    | `target_user: "在校生"` |
+| 手机号   | "13800138000" | `phone: "13800138000"`  |
+
+
+
+#### 3.2.3 槽位填充 (Slot Filling)
+
+当必填参数缺失时，智能追问：
+
+***\*示例场景\****:
+
+```
+用户: "帮我查下我的套餐"
+↓ [NLU检测到缺少phone槽位]
+系统: "请问您的手机号是多少呢？"
+↓
+用户: "13800138000"
+↓ [NLU填充phone槽位，执行查询]
+系统: "您当前使用的是【经济套餐】..."
+```
+
+
+
+### 3.3 NLU处理流程
+
+```mermaid
+graph TB
+    Start([用户输入文本]) --> Preprocess[文本预处理模块]
+    
+    Preprocess --> P1[去除多余空格和特殊符号]
+    P1 --> P2[数字归一化]
+    P2 --> P3[价格关键词识别]
+    P3 --> CleanText[清洗后的文本]
+    
+    CleanText --> CheckSession{检查会话状态}
+    CheckSession -->|新会话| BuildMsg1[构建消息]
+    CheckSession -->|有历史| GetContext[获取上下文]
+    
+    GetContext --> MergeContext[合并上下文信息]
+    MergeContext --> BuildMsg2[构建消息含历史]
+    
+    BuildMsg1 --> LLMCall[调用大模型API]
+    BuildMsg2 --> LLMCall
+    
+    LLMCall --> SystemPrompt[System Prompt]
+    SystemPrompt --> UserMessage[User Message]
+    UserMessage --> FunctionDefs[Function Definitions]
+    FunctionDefs --> ModelProcess[模型处理]
+    
+    ModelProcess --> ResponseType{响应类型判断}
+    
+    ResponseType -->|Function Call| ExtractFunc[提取Function信息]
+    ResponseType -->|纯文本| TextResponse[直接文本回复]
+    ResponseType -->|Error| ErrorHandle[错误处理]
+    
+    ExtractFunc --> ParseJSON[解析JSON参数]
+    ParseJSON --> ValidateParams{参数验证}
+    
+    ValidateParams --> CheckRequired{所有必填参数齐全?}
+    
+    CheckRequired -->|是| ParamsComplete[参数完整]
+    CheckRequired -->|否| FindMissing[找出缺失槽位]
+    
+    FindMissing --> CheckContext{上下文中有该参数?}
+    CheckContext -->|有| FillFromContext[从上下文补全]
+    CheckContext -->|无| GenQuestion[生成追问话术]
+    
+    FillFromContext --> ParamsComplete
+    GenQuestion --> NLUResult1[NLU结果需要澄清]
+    
+    ParamsComplete --> FunctionRouter[Function路由器]
+    
+    FunctionRouter --> RouteDecision{Function类型判断}
+    
+    RouteDecision -->|套餐查询类| DBRoute[数据库查询路由]
+    RouteDecision -->|业务咨询类| RAGRoute[RAG路由预留]
+    
+    DBRoute --> BuildSQL[构建SQL查询]
+    BuildSQL --> ExecSQL[执行SQL]
+    ExecSQL --> FormatResult[格式化结果]
+    
+    RAGRoute --> RAGCheck{RAG是否启用?}
+    RAGCheck -->|是| RAGProcess[向量检索]
+    RAGCheck -->|否| DefaultReply[返回默认提示]
+    
+    FormatResult --> MergeData[合并查询结果]
+    RAGProcess --> MergeData
+    DefaultReply --> MergeData
+    
+    MergeData --> NLUResult2[NLU结果包含数据]
+    
+    TextResponse --> NLUResult3[NLU结果直接回复]
+    ErrorHandle --> NLUResult4[NLU结果错误信息]
+    
+    NLUResult1 --> UpdateSession1[更新会话状态]
+    NLUResult2 --> UpdateSession2[更新会话状态]
+    NLUResult3 --> UpdateSession3[更新会话状态]
+    NLUResult4 --> UpdateSession3
+    
+    UpdateSession1 --> Return1([返回需要用户补充信息])
+    UpdateSession2 --> Return2([返回完整的查询结果])
+    UpdateSession3 --> Return3([返回文本回复])
+    
+    style LLMCall fill:#4A90E2,color:#fff
+    style FunctionRouter fill:#F5A623,color:#fff
+    style DBRoute fill:#7ED321,color:#fff
+    style RAGRoute fill:#D0D0D0,color:#333
+    style ParamsComplete fill:#50E3C2,color:#000
+    style GenQuestion fill:#FF6B6B,color:#fff
+```
+
+
+
+#### 完整流程图
+
+```
+用户输入文本
+   ↓
+┌─────────────────────────────────┐
+│  1. 文本预处理模块               │
+│  - 去除多余空格和特殊符号        │
+│  - 数字归一化(一百→100)          │
+│  - 价格关键词识别(块→元)         │
+└─────────────────────────────────┘
+   ↓
+┌─────────────────────────────────┐
+│  2. 上下文检查                   │
+│  检查会话状态                    │
+└─────────────────────────────────┘
+   ↓
+   是否有历史会话？
+   ├─ 是 → 获取上下文 → 合并上下文信息
+   └─ 否 → 构建新消息
+   ↓
+┌─────────────────────────────────┐
+│  3. 大模型理解 ⭐ 核心            │
+│  调用Function Calling API        │
+│  - System Prompt                 │
+│  - User Message                  │
+│  - Function Definitions          │
+│  - 模型处理                      │
+└─────────────────────────────────┘
+   ↓
+┌─────────────────────────────────┐
+│  4. 响应类型判断                 │
+└─────────────────────────────────┘
+   ↓
+   ├─ Function Call → 提取Function信息 → 解析JSON参数
+   ├─ 纯文本 → 直接文本回复(闲聊/澄清)
+   └─ Error → 错误处理
+   ↓
+┌─────────────────────────────────┐
+│  5. 参数验证                     │
+│  检查必填参数是否完整            │
+└─────────────────────────────────┘
+   ↓
+   所有必填参数齐全？
+   ├─ 是 → 参数完整
+   └─ 否 → 找出缺失槽位
+            ↓
+            上下文中有该参数？
+            ├─ 有 → 从上下文补全 → 参数完整
+            └─ 无 → 生成追问话术 → 返回(需要用户补充信息)
+   ↓
+┌─────────────────────────────────┐
+│  6. Function路由器               │
+│  判断Function类型                │
+└─────────────────────────────────┘
+   ↓
+   ├─ 套餐查询类(query_packages等)
+   │    ↓
+   │  ┌────────────────────────┐
+   │  │ 数据库查询路由          │
+   │  │ - 构建SQL查询           │
+   │  │ - 执行SQL              │
+   │  │ - 格式化结果           │
+   │  └────────────────────────┘
+   │
+   └─ 业务咨询类(business_consultation)
+        ↓
+      ┌────────────────────────┐
+      │ RAG路由(预留)          │
+      │ RAG是否启用？          │
+      │ ├─ 是 → 向量检索       │
+      │ └─ 否 → 返回默认提示   │
+      └────────────────────────┘
+   ↓
+┌─────────────────────────────────┐
+│  7. 合并查询结果                 │
+└─────────────────────────────────┘
+   ↓
+┌─────────────────────────────────┐
+│  8. 更新会话状态                 │
+│  保存当前意图和已知槽位          │
+└─────────────────────────────────┘
+   ↓
+返回NLU结果
+├─ 需要澄清 → 返回追问话术
+├─ 包含数据 → 返回完整查询结果
+└─ 直接回复 → 返回文本回复
+```
+
+
+
+#### 详细步骤说明
+
+**步骤1: 文本预处理**
+
+```python
+def _preprocess(text: str) -> str:
+    # 去除多余空格
+    text = re.sub(r'\s+', ' ', text).strip()
+    
+    # 数字归一化
+    text = text.replace('一百', '100').replace('两百', '200')
+    
+    # 价格单位统一
+    text = text.replace('块', '元')
+    
+    return text
+```
+
+***\*步骤2: 上下文检查\****
+
+- 检查session_id是否存在
+
+- 如果存在，加载历史对话
+
+- 如果有user_phone，加入上下文
+
+
+
+***\*步骤3: 大模型理解\****
+
+```python
+response = client.chat.completions.create(
+
+​    model="gpt-4",
+
+​    messages=[
+
+​        {"role": "system", "content": SYSTEM_PROMPT},
+
+​        {"role": "user", "content": user_input}
+
+​    ],
+
+​    tools=FUNCTION_DEFINITIONS,
+
+​    tool_choice="auto"
+
+)
+```
+
+**步骤4:解析响应**
+
+- 如果返回tool_calls → 提取function和参数
+
+- 如果返回纯文本 → 闲聊或澄清
+
+- 如果返回错误 → 异常处理
+
+***\*步骤5: 参数验证\****
+
+```python
+def _validate_parameters(function_name, parameters, context):
+    missing = []
+    required = get_required_params(function_name)
+    
+    for param in required:
+        if param not in parameters:
+            # 尝试从上下文补全
+            if param == "phone" and context.get("user_phone"):
+                parameters[param] = context["user_phone"]
+            else:
+                missing.append(param)
+    
+    return missing
+```
+
+***\*步骤6: Function路由\****
+
+```python
+def route_function(function_name, parameters):
+    if function_name == "business_consultation":
+        return execute_rag(parameters)  # RAG预留
+    else:
+        return execute_db_query(function_name, parameters)
+```
+
+### 3.4 核心组件设计
+
+#### 3.4.1 NLUEngine 类
+
+```python
+class NLUEngine:
+    """NLU引擎主控制器"""
+    
+    def __init__(self):
+        self.client = OpenAI(api_key=settings.OPENAI_API_KEY)
+        self.model = settings.OPENAI_MODEL
+        self.sessions = {}
+    
+    def understand(self, user_input, session_id, user_phone=None) -> NLUResult:
+        """理解用户输入，返回结构化结果"""
+        # 1. 预处理
+        # 2. 获取上下文
+        # 3. 调用大模型
+        # 4. 解析响应
+        # 5. 验证参数
+        # 6. 返回结果
+    
+    def _preprocess(self, text) -> str:
+        """文本预处理"""
+    
+    def _call_llm(self, messages) -> Response:
+        """调用大模型"""
+    
+    def _parse_response(self, response) -> NLUResult:
+        """解析响应"""
+    
+    def _validate_parameters(self, function_name, params) -> List[str]:
+        """验证参数，返回缺失的槽位"""
+```
+
+**NLUResult 数据结构**:
+
+```python
+@dataclass
+class NLUResult:
+    intent: str                          # 意图
+    function_name: Optional[str]         # 调用的函数名
+    parameters: Dict[str, Any]           # 提取的参数
+    confidence: float                    # 置信度
+    requires_clarification: bool         # 是否需要澄清
+    clarification_message: Optional[str] # 澄清提示
+    missing_slots: List[str]             # 缺失的槽位
+```
+
+#### 3.4.2 FunctionRouter 类
+
+```python
+class FunctionRouter:
+    """Function调用路由"""
+    
+    def route(self, function_name, parameters) -> Dict:
+        """路由到对应的执行器"""
+        if function_name == "business_consultation":
+            return self._execute_rag_query(parameters)
+        else:
+            return self._execute_db_query(function_name, parameters)
+    
+    def _execute_db_query(self, function_name, params) -> Dict:
+        """执行数据库查询"""
+        executor = DatabaseExecutor()
+        return executor.execute_function(function_name, params)
+    
+    def _execute_rag_query(self, params) -> Dict:
+        """执行RAG查询(预留)"""
+        if not settings.RAG_ENABLED:
+            return {"success": True, "response": "RAG功能开发中..."}
+        # TODO: 接入RAG
+```
+
+#### 3.4.3 DatabaseExecutor 类
+
+```python
+class DatabaseExecutor:
+    """数据库查询执行器"""
+    
+    def execute_function(self, function_name, parameters) -> Dict:
+        """执行Function调用"""
+        executor_map = {
+            "query_packages": self.query_packages,
+            "query_current_package": self.query_current_package,
+            # ...
+        }
+        return executor_map[function_name](**parameters)
+    
+    def query_packages(self, price_min=None, price_max=None, ...):
+        """查询套餐列表"""
+        # 构建SQL并执行
+    
+    def query_current_package(self, phone):
+        """查询用户当前套餐"""
+        # 查询用户信息
+```
+
+---
+
+## 技术实现方案
+
+### 4.1 技术选型
+
+#### 4.1.1 核心技术
+
+| 技术     | 选型                   | 理由                 |
+| -------- | ---------------------- | -------------------- |
+| 编程语言 | Python 3.10+           | 生态丰富，AI库支持好 |
+| NLU方案  | 大模型Function Calling | 无需训练，理解能力强 |
+| 大模型   | OpenAI GPT-4 / Claude  | 成熟稳定，API完善    |
+| 数据库   | MySQL 8.0              | 关系型数据，事务支持 |
+| ORM      | SQLAlchemy             | Python生态标准       |
+| 日志     | Loguru                 | 简单易用，功能强大   |
+
+#### 4.1.2 为什么使用Function Calling？
+
+**对比传统NLU方案**:
+
+| 方案                    | 优点                     | 缺点                               |
+| ----------------------- | ------------------------ | ---------------------------------- |
+| **传统NLU** (BERT/LSTM) | 响应快，成本低           | 需要标注数据，需要训练，泛化能力弱 |
+| **大模型Fine-tuning**   | 效果好，可定制           | 成本高，需要GPU，维护复杂          |
+| **Function Calling** ⭐  | 无需训练，泛化强，易维护 | API调用成本，有延迟                |
+
+**我们选择Function Calling的原因**:
+
+1. ✅ **快速迭代**: 无需标注数据和训练模型
+2. ✅ **理解能力强**: GPT-4对自然语言理解能力出色
+3. ✅ **易于扩展**: 新增意图只需添加Function定义
+4. ✅ **维护成本低**: 不需要管理模型训练流程
+5. ✅ **适合中小规模**: 对于客服场景，调用频率可控
+
+### 4.2 Function Calling定义
+
+#### 4.2.1 Function定义规范
+
+每个Function包含以下字段：
+
+- `name`: 函数名称
+- `description`: 功能描述(帮助模型理解何时调用)
+- `parameters`: 参数定义
+  - `type`: 参数类型
+  - `properties`: 参数属性
+  - `required`: 必填参数列表
+
+#### 4.2.2 完整Function定义
+
+**1. query_packages (查询套餐)**
+
+```json
+{
+  "name": "query_packages",
+  "description": "查询符合条件的流量套餐列表。当用户想了解套餐、比较套餐、查找合适的套餐时使用",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "price_min": {
+        "type": "number",
+        "description": "最低价格(元/月),例如'50元以上'表示price_min=50"
+      },
+      "price_max": {
+        "type": "number",
+        "description": "最高价格(元/月),例如'100元以内'表示price_max=100"
+      },
+      "data_min": {
+        "type": "number",
+        "description": "最少流量(GB/月),例如'至少50G'表示data_min=50"
+      },
+      "data_max": {
+        "type": "number",
+        "description": "最多流量(GB/月)"
+      },
+      "target_user": {
+        "type": "string",
+        "enum": ["无限制", "在校生"],
+        "description": "适用人群。'学生套餐'、'校园套餐'对应'在校生'"
+      },
+      "sort_by": {
+        "type": "string",
+        "enum": ["price_asc", "price_desc", "data_desc"],
+        "description": "排序方式。price_asc=价格升序(便宜优先)",
+        "default": "price_asc"
+      }
+    },
+    "required": []
+  }
+}
+```
+
+**2. query_current_package (查询当前套餐)**
+
+```json
+{
+  "name": "query_current_package",
+  "description": "查询用户当前使用的套餐信息。当用户询问'我现在是什么套餐'时使用",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "phone": {
+        "type": "string",
+        "description": "手机号码,11位数字,格式如13800138000"
+      }
+    },
+    "required": ["phone"]
+  }
+}
+```
+
+**3. query_package_detail (查询套餐详情)**
+
+```json
+{
+  "name": "query_package_detail",
+  "description": "查询指定套餐的详细信息",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "package_name": {
+        "type": "string",
+        "enum": ["经济套餐", "畅游套餐", "无限套餐", "校园套餐"],
+        "description": "套餐名称"
+      }
+    },
+    "required": ["package_name"]
+  }
+}
+```
+
+**4. change_package (办理套餐变更)**
+
+```json
+{
+  "name": "change_package",
+  "description": "办理套餐变更。当用户明确要求更换/办理某个套餐时使用",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "phone": {"type": "string", "description": "手机号码"},
+      "new_package_name": {
+        "type": "string",
+        "enum": ["经济套餐", "畅游套餐", "无限套餐", "校园套餐"],
+        "description": "要更换的新套餐名称"
+      }
+    },
+    "required": ["phone", "new_package_name"]
+  }
+}
+```
+
+**5. query_usage (查询使用情况)**
+
+```json
+{
+  "name": "query_usage",
+  "description": "查询用户的流量、话费使用情况",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "phone": {"type": "string", "description": "手机号码"},
+      "query_type": {
+        "type": "string",
+        "enum": ["data", "balance", "all"],
+        "description": "查询类型: data=流量, balance=余额, all=全部",
+        "default": "all"
+      }
+    },
+    "required": ["phone"]
+  }
+}
+```
+
+**6. business_consultation (业务咨询 - RAG预留)**
+
+```json
+{
+  "name": "business_consultation",
+  "description": "业务咨询和政策说明。当用户询问业务规则、办理流程、优惠活动等时使用(预留RAG接口)",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "question": {"type": "string", "description": "用户的咨询问题"},
+      "business_type": {
+        "type": "string",
+        "enum": ["套餐说明", "办理流程", "资费规则", "优惠活动", "其他"],
+        "description": "业务类型分类"
+      }
+    },
+    "required": ["question"]
+  }
+}
+```
+
+### 4.3 System Prompt设计
+
+```python
+SYSTEM_PROMPT = """你是一个专业的电信客服助手,负责帮助用户查询和办理流量套餐业务。
+
+【你的职责】
+1. 理解用户的自然语言需求
+2. 识别用户意图并调用相应的函数
+3. 当信息不完整时,友好地向用户确认缺失的信息
+4. 用专业但亲切的语气与用户交流
+
+【当前可用套餐】
+- 经济套餐: 10G/月, 50元/月, 无限制人群
+- 畅游套餐: 100G/月, 180元/月, 无限制人群
+- 无限套餐: 1000G/月, 300元/月, 无限制人群
+- 校园套餐: 200G/月, 150元/月, 在校生专享
+
+【理解规则】
+- 价格表达要准确理解: "100块以内"→price_max=100, "50元以上"→price_min=50
+- "便宜点的"、"经济实惠"等模糊表达→sort_by="price_asc"
+- "学生套餐"、"校园"→target_user="在校生"
+- 如果用户没有提供手机号,需要礼貌询问
+
+【重要】
+- 始终保持友好和专业
+- 不要假设用户信息,缺失时一定要询问
+- 回答要简洁明了
+"""
+```
+
+### 4.4 槽位填充策略
+
+#### 追问话术模板
+
+```python
+SLOT_QUESTIONS = {
+    "phone": "请问您的手机号码是多少呢？",
+    "package_name": "请问您想了解哪个套餐呢？我们有经济套餐、畅游套餐、无限套餐和校园套餐。",
+    "new_package_name": "请问您想更换为哪个套餐？",
+    "query_type": "您想查询流量使用情况还是话费余额？",
+}
+```
+
+#### 槽位补全优先级
+
+1. **从当前参数中获取** (优先级最高)
+2. **从上下文中补全** (如user_phone)
+3. **从历史槽位值中补全**
+4. **追问用户** (最后的手段)
+
+---
+
+## 数据库设计
+
+### 5.1 ER图
+
+```
+┌─────────────┐         ┌─────────────┐
+│  packages   │         │    users    │
+├─────────────┤         ├─────────────┤
+│ id (PK)     │         │ phone (PK)  │
+│ name        │◄────────│ current_    │
+│ data_gb     │  FK     │  package_id │
+│ price       │         │ usage_gb    │
+│ target_user │         │ balance     │
+│ description │         └─────────────┘
+└─────────────┘
+```
+
+### 5.2 表结构设计
+
+#### 5.2.1 套餐表 (packages)
+
+```sql
+CREATE TABLE packages (
+    id INT PRIMARY KEY AUTO_INCREMENT COMMENT '套餐ID',
+    name VARCHAR(50) NOT NULL UNIQUE COMMENT '套餐名称',
+    data_gb INT NOT NULL COMMENT '每月流量(GB)',
+    voice_minutes INT DEFAULT 0 COMMENT '每月通话时长(分钟)',
+    price DECIMAL(10,2) NOT NULL COMMENT '月费(元)',
+    target_user VARCHAR(20) DEFAULT '无限制' COMMENT '适用人群',
+    description TEXT COMMENT '套餐说明',
+    status TINYINT DEFAULT 1 COMMENT '状态: 1=在售, 0=下架',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_price (price),
+    INDEX idx_data (data_gb),
+    INDEX idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='套餐信息表';
+```
+
+#### 5.2.2 用户表 (users)
+
+```sql
+CREATE TABLE users (
+    phone VARCHAR(11) PRIMARY KEY COMMENT '手机号',
+    name VARCHAR(50) COMMENT '姓名',
+    current_package_id INT COMMENT '当前套餐ID',
+    package_start_date DATE COMMENT '套餐生效日期',
+    monthly_usage_gb DECIMAL(10,2) DEFAULT 0 COMMENT '本月已用流量(GB)',
+    monthly_usage_minutes INT DEFAULT 0 COMMENT '本月已用通话(分钟)',
+    balance DECIMAL(10,2) DEFAULT 0 COMMENT '账户余额(元)',
+    status TINYINT DEFAULT 1 COMMENT '状态: 1=正常, 0=停机',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (current_package_id) REFERENCES packages(id),
+    INDEX idx_package (current_package_id),
+    INDEX idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户信息表';
+```
+
+#### 5.2.3 对话记录表 (conversations)
+
+```sql
+CREATE TABLE conversations (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    session_id VARCHAR(64) NOT NULL COMMENT '会话ID',
+    phone VARCHAR(11) COMMENT '用户手机号',
+    user_input TEXT NOT NULL COMMENT '用户输入',
+    intent VARCHAR(50) COMMENT '识别的意图',
+    function_name VARCHAR(50) COMMENT '调用的函数',
+    parameters JSON COMMENT '函数参数',
+    bot_response TEXT COMMENT '机器人回复',
+    execution_time_ms INT COMMENT '执行耗时(毫秒)',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_session (session_id),
+    INDEX idx_phone (phone),
+    INDEX idx_created (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='对话记录表';
+```
+
+### 5.3 初始化数据
+
+```sql
+-- 插入套餐数据
+INSERT INTO packages (name, data_gb, voice_minutes, price, target_user, description) VALUES
+('经济套餐', 10, 100, 50.00, '无限制', '适合轻度上网用户,性价比高'),
+('畅游套餐', 100, 300, 180.00, '无限制', '适合经常上网的用户,流量充足'),
+('无限套餐', 1000, 1000, 300.00, '无限制', '流量无忧,畅享网络,商务首选'),
+('校园套餐', 200, 200, 150.00, '在校生', '学生专享优惠套餐,需提供学生证');
+
+-- 插入测试用户数据
+INSERT INTO users (phone, name, current_package_id, monthly_usage_gb, balance) VALUES
+('13800138000', '张三', 1, 5.2, 45.50),
+('13900139000', '李四', 2, 67.8, 120.00),
+('13700137000', '王五', 4, 125.5, 50.00);
+```
+
+---
+
+
+## 代码实现
+
+### 6.1 项目目录结构
+
+```
+telecom-ai-customer-service/
+│
+├── config/                    # 配置模块
+│   ├── __init__.py
+│   ├── settings.py           # 系统配置
+│   └── prompts.py            # Prompt模板
+│
+├── core/                      # 核心业务逻辑
+│   ├── __init__.py
+│   │
+│   └── nlu/                  # 【第一阶段】NLU模块
+│       ├── __init__.py
+│       ├── nlu_engine.py     # NLU引擎主类
+│       ├── function_definitions.py  # Function定义
+│       └── slot_filler.py    # 槽位填充(扩展)
+│
+├── executor/                  # 执行层
+│   ├── __init__.py
+│   ├── db_executor.py        # 数据库执行器
+│   ├── rag_executor.py       # RAG执行器(预留)
+│   └── api_executor.py       # API执行器
+│
+├── database/                  # 数据库
+│   ├── __init__.py
+│   ├── db_manager.py         # 数据库管理器
+│   ├── schema.sql            # 表结构SQL
+│   └── init_data.sql         # 初始化数据SQL
+│
+├── models/                    # 数据模型
+│   ├── __init__.py
+│   ├── package.py            # 套餐模型
+│   ├── user.py               # 用户模型
+│   └── conversation.py       # 对话模型
+│
+├── utils/                     # 工具函数
+│   ├── __init__.py
+│   ├── logger.py             # 日志工具
+│   └── validators.py         # 数据验证
+│
+├── examples/                  # 示例代码
+│   └── phase1_demo.py        # 第一阶段演示
+│
+├── tests/                     # 测试代码
+│   ├── __init__.py
+│   ├── test_nlu.py           # NLU测试
+│   ├── test_db_executor.py   # 执行器测试
+│   └── test_integration.py   # 集成测试
+│
+├── .env.example              # 环境变量模板
+├── requirements.txt          # Python依赖
+├── docker-compose.yml        # Docker配置
+├── Makefile                  # 项目管理命令
+└── README.md                 # 项目说明
+```
+
+### 6.2 核心代码实现
+
+#### 6.2.1 配置文件 (config/settings.py)
+
+```python
+from pydantic_settings import BaseSettings
+
+class Settings(BaseSettings):
+    # 应用配置
+    APP_NAME: str = "电信套餐AI客服系统"
+    VERSION: str = "0.1.0"
+    DEBUG: bool = True
+    
+    # 大模型配置
+    LLM_PROVIDER: str = "openai"
+    OPENAI_API_KEY: str = ""
+    OPENAI_MODEL: str = "gpt-4"
+    ANTHROPIC_API_KEY: str = ""
+    ANTHROPIC_MODEL: str = "claude-sonnet-4-20250514"
+    
+    # 数据库配置
+    DB_HOST: str = "localhost"
+    DB_PORT: int = 3306
+    DB_USER: str = "root"
+    DB_PASSWORD: str = "password"
+    DB_NAME: str = "telecom_chatbot"
+    
+    # RAG配置 (预留)
+    RAG_ENABLED: bool = False
+    
+    @property
+    def database_url(self) -> str:
+        return f"mysql+pymysql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+    
+    class Config:
+        env_file = ".env"
+
+settings = Settings()
+```
+
+#### 6.2.2 NLU引擎 (core/nlu/nlu_engine.py)
+
+```python
+from typing import Dict, Any, Optional, List
+from dataclasses import dataclass, field
+from openai import OpenAI
+
+@dataclass
+class NLUResult:
+    """NLU解析结果"""
+    intent: str
+    function_name: Optional[str] = None
+    parameters: Dict[str, Any] = field(default_factory=dict)
+    confidence: float = 0.0
+    requires_clarification: bool = False
+    clarification_message: Optional[str] = None
+    missing_slots: List[str] = field(default_factory=list)
+
+class NLUEngine:
+    """NLU引擎 - 基于大模型Function Calling"""
+    
+    def __init__(self):
+        self.client = OpenAI(api_key=settings.OPENAI_API_KEY)
+        self.model = settings.OPENAI_MODEL
+        self.sessions = {}
+    
+    def understand(self,
+                   user_input: str,
+                   session_id: str,
+                   user_phone: Optional[str] = None) -> NLUResult:
+        """理解用户输入"""
+        
+        # 1. 文本预处理
+        processed_text = self._preprocess(user_input)
+        
+        # 2. 获取上下文
+        context = self._get_session_context(session_id)
+        if user_phone:
+            context["user_phone"] = user_phone
+        
+        # 3. 构建消息
+        messages = self._build_messages(processed_text, context)
+        
+        # 4. 调用大模型
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=messages,
+            tools=FUNCTION_DEFINITIONS,
+            tool_choice="auto",
+            temperature=0.3
+        )
+        
+        # 5. 解析响应
+        nlu_result = self._parse_response(response, context)
+        
+        # 6. 更新会话
+        self._update_session(session_id, user_input, nlu_result, context)
+        
+        return nlu_result
+    
+    def _preprocess(self, text: str) -> str:
+        """文本预处理"""
+        text = re.sub(r'\s+', ' ', text).strip()
+        text = text.replace('一百', '100').replace('两百', '200')
+        text = text.replace('块', '元')
+        return text
+    
+    def _parse_response(self, response, context) -> NLUResult:
+        """解析大模型响应"""
+        message = response.choices[0].message
+        
+        # 调用了Function
+        if message.tool_calls:
+            tool_call = message.tool_calls[0]
+            function_name = tool_call.function.name
+            parameters = json.loads(tool_call.function.arguments)
+            
+            # 参数验证
+            missing_slots = self._validate_parameters(
+                function_name, parameters, context
+            )
+            
+            if missing_slots:
+                return NLUResult(
+                    intent=function_name,
+                    function_name=function_name,
+                    parameters=parameters,
+                    requires_clarification=True,
+                    clarification_message=self._get_slot_question(missing_slots[0]),
+                    missing_slots=missing_slots
+                )
+            
+            return NLUResult(
+                intent=function_name,
+                function_name=function_name,
+                parameters=parameters,
+                confidence=0.9
+            )
+        
+        # 纯文本回复
+        return NLUResult(
+            intent="chat",
+            raw_response=message.content
+        )
+```
+
+#### 6.2.3 数据库执行器 (executor/db_executor.py)
+
+```python
+class DatabaseExecutor:
+    """数据库查询执行器"""
+    
+    def execute_function(self, function_name: str, parameters: Dict) -> Dict:
+        """执行Function调用"""
+        executor_map = {
+            "query_packages": self.query_packages,
+            "query_current_package": self.query_current_package,
+            "query_package_detail": self.query_package_detail,
+            "change_package": self.change_package,
+            "query_usage": self.query_usage,
+            "business_consultation": self.business_consultation
+        }
+        
+        executor = executor_map.get(function_name)
+        if not executor:
+            return {"success": False, "error": f"未知函数: {function_name}"}
+        
+        try:
+            return executor(**parameters)
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+    
+    def query_packages(self, price_min=None, price_max=None, 
+                      data_min=None, sort_by="price_asc") -> Dict:
+        """查询套餐列表"""
+        sql = "SELECT * FROM packages WHERE status = 1"
+        params = {}
+        
+        if price_min:
+            sql += " AND price >= :price_min"
+            params['price_min'] = price_min
+        
+        if price_max:
+            sql += " AND price <= :price_max"
+            params['price_max'] = price_max
+        
+        if data_min:
+            sql += " AND data_gb >= :data_min"
+            params['data_min'] = data_min
+        
+        # 排序
+        sort_map = {
+            "price_asc": "price ASC",
+            "price_desc": "price DESC",
+            "data_desc": "data_gb DESC"
+        }
+        sql += f" ORDER BY {sort_map.get(sort_by, 'price ASC')}"
+        
+        rows = self.db.execute_query(sql, params)
+        
+        packages = [
+            {
+                "id": row[0],
+                "name": row[1],
+                "data_gb": row[2],
+                "price": float(row[4]),
+                "target_user": row[5]
+            }
+            for row in rows
+        ]
+        
+        return {"success": True, "data": packages, "count": len(packages)}
+```
+
+#### 6.2.4 完整对话系统 (core/chatbot_phase1.py)
+
+```python
+class TelecomChatbotPhase1:
+    """电信客服对话系统 - 第一阶段"""
+    
+    def __init__(self):
+        self.nlu = NLUEngine()
+        self.db_executor = DatabaseExecutor()
+    
+    def chat(self, user_input: str, session_id: str = None,
+             user_phone: str = None) -> Dict:
+        """处理用户输入"""
+        
+        if not session_id:
+            session_id = str(uuid.uuid4())
+        
+        # 1. NLU理解
+        nlu_result = self.nlu.understand(user_input, session_id, user_phone)
+        
+        # 2. 如果需要澄清
+        if nlu_result.requires_clarification:
+            return {
+                "session_id": session_id,
+                "response": nlu_result.clarification_message,
+                "requires_input": True,
+                "missing_slots": nlu_result.missing_slots
+            }
+        
+        # 3. 执行Function
+        if nlu_result.function_name:
+            exec_result = self.db_executor.execute_function(
+                nlu_result.function_name,
+                nlu_result.parameters
+            )
+        
+        # 4. 生成响应
+        response_text = self._generate_response(
+            nlu_result.function_name,
+            exec_result
+        )
+        
+        return {
+            "session_id": session_id,
+            "response": response_text,
+            "intent": nlu_result.intent,
+            "data": exec_result
+        }
+    
+    def _generate_response(self, function_name, exec_result):
+        """生成自然语言响应"""
+        if function_name == "query_packages":
+            return self._format_packages_response(exec_result)
+        elif function_name == "query_current_package":
+            return self._format_current_package_response(exec_result)
+        # ...更多格式化逻辑
+```
+
+
+
+---
+
+## 测试方案
+
+### 7.1 测试策略
+
+#### 测试金字塔
+
+```
+        /\
+       /  \      E2E测试 (集成测试)
+      /────\     - 完整对话流程
+     /      \    - 多轮对话测试
+    /────────\   
+   /          \  单元测试
+  /____________\ - NLU模块测试
+                 - 执行器测试
+                 - 工具函数测试
+```
+
+### 7.2 测试用例
+
+#### 7.2.1 NLU意图识别测试
+
+```python
+class TestNLUEngine:
+    
+    def test_price_query(self):
+        """测试价格查询"""
+        nlu = NLUEngine()
+        result = nlu.understand("有100块以内的套餐吗", "test_001")
+        
+        assert result.intent == "query_packages"
+        assert result.parameters.get("price_max") == 100
+        assert not result.requires_clarification
+    
+    def test_fuzzy_query(self):
+        """测试模糊查询"""
+        result = nlu.understand("想要便宜点的套餐", "test_002")
+        
+        assert result.intent == "query_packages"
+        assert result.parameters.get("sort_by") == "price_asc"
+    
+    def test_missing_param(self):
+        """测试缺失参数"""
+        result = nlu.understand("查下我的套餐", "test_003")
+        
+        assert result.intent == "query_current_package"
+        assert result.requires_clarification
+        assert "phone" in result.missing_slots
+```
+
+#### 7.2.2 数据库执行器测试
+
+```python
+class TestDatabaseExecutor:
+    
+    def test_query_packages(self):
+        """测试套餐查询"""
+        executor = DatabaseExecutor()
+        result = executor.query_packages(price_max=100)
+        
+        assert result["success"]
+        assert all(pkg["price"] <= 100 for pkg in result["data"])
+    
+    def test_invalid_phone(self):
+        """测试无效手机号"""
+        result = executor.query_current_package(phone="123")
+        
+        assert not result["success"]
+        assert "error" in result
+```
+
+#### 7.2.3 集成测试
+
+```python
+class TestIntegration:
+    
+    def test_complete_conversation(self):
+        """测试完整对话流程"""
+        chatbot = TelecomChatbotPhase1()
+        
+        response = chatbot.chat("有100元以内的套餐吗")
+        
+        assert response["intent"] == "query_packages"
+        assert not response["requires_input"]
+        assert response["data"]["success"]
+    
+    def test_multi_turn_conversation(self):
+        """测试多轮对话"""
+        chatbot = TelecomChatbotPhase1()
+        session_id = "test_session"
+        
+        # 第一轮
+        response1 = chatbot.chat("查我的套餐", session_id=session_id)
+        assert response1["requires_input"]
+        
+        # 第二轮
+        response2 = chatbot.chat("13800138000", session_id=session_id)
+        assert not response2["requires_input"]
+```
+
+### 7.3 测试覆盖率目标
+
+| 模块         | 目标覆盖率     | 当前状态 |
+| ------------ | -------------- | -------- |
+| NLU引擎      | > 80%          | ✅        |
+| 数据库执行器 | > 85%          | ✅        |
+| 工具函数     | > 90%          | ✅        |
+| 集成测试     | 核心流程全覆盖 | ✅        |
+
+### 7.4 运行测试
+
+```bash
+# 运行所有测试
+pytest tests/ -v
+
+# 查看覆盖率
+pytest tests/ --cov=core --cov=executor --cov-report=html
+
+# 运行特定测试
+pytest tests/test_nlu.py -v
+
+# 运行并显示详细输出
+pytest tests/ -v -s
+```
+
+---
+
+## 部署指南
+
+### 8.1 环境准备
+
+#### 8.1.1 系统要求
+
+- **操作系统**: Linux / macOS / Windows
+- **Python**: 3.10+
+- **MySQL**: 8.0+
+- **内存**: 至少2GB
+- **磁盘**: 至少10GB
+
+#### 8.1.2 安装依赖
+
+```bash
+# 克隆项目
+git clone <your-repo-url>
+cd telecom-ai-customer-service
+
+# 创建虚拟环境
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# 或
+venv\Scripts\activate  # Windows
+
+# 安装依赖
+pip install -r requirements.txt
+```
+
+**requirements.txt**:
+
+```
+openai>=1.0.0
+anthropic>=0.18.0
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+pymysql>=1.1.0
+SQLAlchemy>=2.0.0
+loguru>=0.7.0
+python-dotenv>=1.0.0
+pytest>=7.4.0
+pytest-cov>=4.1.0
+```
+
+### 8.2 配置环境
+
+#### 8.2.1 创建环境变量文件
+
+```bash
+cp .env.example .env
+```
+
+#### 8.2.2 编辑 .env 文件
+
+```ini
+# 大模型配置 (二选一)
+OPENAI_API_KEY=sk-your-openai-key-here
+ANTHROPIC_API_KEY=your-anthropic-key-here
+
+# 数据库配置
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=your_password
+DB_NAME=telecom_chatbot
+
+# 应用配置
+DEBUG=True
+LLM_PROVIDER=openai
+```
+
+### 8.3 初始化数据库
+
+#### 方式1: 使用MySQL命令
+
+```bash
+# 创建数据库并导入数据
+mysql -u root -p < database/schema.sql
+mysql -u root -p < database/init_data.sql
+```
+
+#### 方式2: 使用Docker Compose
+
+```bash
+# 启动MySQL容器
+docker-compose up -d mysql
+
+# 数据会自动初始化
+```
+
+**docker-compose.yml**:
+
+```yaml
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: telecom_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: telecom_chatbot
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/1-schema.sql
+      - ./database/init_data.sql:/docker-entrypoint-initdb.d/2-init_data.sql
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:
+```
+
+### 8.4 运行项目
+
+#### 8.4.1 运行演示程序
+
+```bash
+# 运行第一阶段演示
+python examples/phase1_demo.py
+```
+
+**演示效果**:
+
+```
+================================================================
+           电信套餐AI智能客服系统 - 第一阶段演示
+================================================================
+
+======================================================================
+
+【演示1: 查询便宜的套餐】
+
+======================================================================
+
+用户: 我想看看有没有便宜点的套餐
+
+系统回复:
+为您找到 4 个合适的套餐:
+
+【经济套餐】
+  💰 月费: 50.0元
+  📊 流量: 10GB/月
+  📞 通话: 100分钟/月
+  👥 适用: 无限制
+
+...
+```
+
+#### 8.4.2 交互式对话
+
+```bash
+# 进入交互模式
+python examples/phase1_demo.py
+
+# 选择 'y' 进入交互模式
+是否进入交互式对话模式? (y/n): y
+
+用户: 有什么套餐
+系统: 为您找到4个套餐...
+
+用户: quit
+再见!
+```
+
+### 8.5 验证部署
+
+#### 检查清单
+
+- [ ] 数据库连接成功
+- [ ] API Key配置正确
+- [ ] 测试用例全部通过
+- [ ] 演示程序运行正常
+- [ ] 日志正常输出
+
+#### 验证脚本
+
+```python
+# verify_deployment.py
+from config.settings import settings
+from database.db_manager import db_manager
+from core.nlu.nlu_engine import NLUEngine
+
+def verify_database():
+    """验证数据库连接"""
+    try:
+        result = db_manager.execute_query("SELECT COUNT(*) FROM packages")
+        print(f"✅ 数据库连接成功, 套餐数量: {result[0][0]}")
+        return True
+    except Exception as e:
+        print(f"❌ 数据库连接失败: {e}")
+        return False
+
+def verify_llm():
+    """验证大模型API"""
+    try:
+        nlu = NLUEngine()
+        result = nlu.understand("测试", "verify_test")
+        print(f"✅ 大模型API连接成功")
+        return True
+    except Exception as e:
+        print(f"❌ 大模型API失败: {e}")
+        return False
+
+if __name__ == "__main__":
+    print("开始验证部署...")
+    db_ok = verify_database()
+    llm_ok = verify_llm()
+    
+    if db_ok and llm_ok:
+        print("\n🎉 部署验证成功!")
+    else:
+        print("\n⚠️ 部署验证失败,请检查配置")
+```
+
+### 8.6 常见问题
+
+#### Q1: 数据库连接失败
+
+```bash
+# 检查MySQL是否运行
+systemctl status mysql
+
+# 测试连接
+mysql -u root -p -e "SHOW DATABASES;"
+
+# 检查配置
+cat .env | grep DB_
+```
+
+#### Q2: API Key错误
+
+```bash
+# 验证OpenAI Key
+curl https://api.openai.com/v1/models \
+  -H "Authorization: Bearer $OPENAI_API_KEY"
+
+# 或在Python中测试
+python -c "from openai import OpenAI; client = OpenAI(); print('Key有效')"
+```
+
+#### Q3: 依赖安装失败
+
+```bash
+# 升级pip
+pip install --upgrade pip
+
+# 使用国内镜像
+pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+```
+
+---
+
+## 附录
+
+### A. 术语表
+
+| 术语             | 英文                           | 解释         |
+| ---------------- | ------------------------------ | ------------ |
+| NLU              | Natural Language Understanding | 自然语言理解 |
+| DST              | Dialog State Tracking          | 对话状态跟踪 |
+| NLG              | Natural Language Generation    | 自然语言生成 |
+| Intent           | Intent                         | 意图         |
+| Entity           | Entity                         | 实体         |
+| Slot             | Slot                           | 槽位         |
+| Function Calling | Function Calling               | 函数调用     |
+| RAG              | Retrieval Augmented Generation | 检索增强生成 |
+
+### B. 参考文档
+
+- [OpenAI Function Calling文档](https://platform.openai.com/docs/guides/function-calling)
+- [Anthropic Claude文档](https://docs.anthropic.com/)
+- [SQLAlchemy文档](https://docs.sqlalchemy.org/)
+- [FastAPI文档](https://fastapi.tiangolo.com/)
+
+### C. 后续扩展计划
+
+#### 第二阶段: DST模块
+
+**目标**: 实现完整的对话状态跟踪
+
+**核心功能**:
+
+- 对话状态管理
+- 会话持久化(Redis)
+- 复杂多轮对话支持
+- 状态回滚机制
+
+#### 第三阶段: Policy + NLG
+
+**目标**: 实现智能对话策略和自然语言生成
+
+**核心功能**:
+
+- 对话策略引擎
+- 主动推荐机制
+- 自然语言生成优化
+- A/B测试框架
+
+#### 第四阶段: Web系统
+
+**目标**: 完整的Web应用和AI Agent
+
+**核心功能**:
+
+- FastAPI后端服务
+- Vue.js前端界面
+- WebSocket实时通信
+- MCP协议集成
+
+---
+
+## 总结
+
+本文档详细介绍了电信套餐AI智能客服系统第一阶段NLU模块的完整设计方案,包括:
+
+✅ **架构设计**: 清晰的分层架构和模块划分  
+✅ **技术方案**: 基于大模型Function Calling的NLU实现  
+✅ **数据库设计**: 完整的表结构和关系设计  
+✅ **代码实现**: 核心模块的详细代码  
+✅ **测试方案**: 完善的测试策略和用例  
+✅ **部署指南**: 详细的部署步骤和问题排查  
+
+**下一步行动**:
+
+1. 按照本文档部署第一阶段系统
+2. 运行测试确保功能正常
+3. 根据实际使用情况优化Prompt和Function定义
+4. 准备第二阶段DST模块的开发
+
+
+# 电信套餐AI智能客服系统 - 第二阶段DST模块设计文档
+
+
+
+## 模块概述
+
+### 1.1 什么是DST？
+
+**DST (Dialog State Tracking)** - 对话状态跟踪，是对话系统的记忆中枢，负责：
+
+```
+┌─────────────────────────────────────┐
+│           DST的核心职责              │
+├─────────────────────────────────────┤
+│ 1. 跟踪对话历史                      │
+│ 2. 维护槽位状态                      │
+│ 3. 管理用户信息                      │
+│ 4. 处理上下文继承                    │
+│ 5. 支持状态回滚                      │
+│ 6. 会话持久化                        │
+└─────────────────────────────────────┘
+```
+
+### 1.2 第二阶段目标
+
+| 目标             | 说明                   |
+| ---------------- | ---------------------- |
+| **完善多轮对话** | 支持复杂的多轮对话场景 |
+| **状态持久化**   | 使用Redis存储会话状态  |
+| **上下文管理**   | 智能的上下文继承和重置 |
+| **会话恢复**     | 支持断线重连后恢复对话 |
+| **状态可视化**   | 提供状态查询和调试接口 |
+
+### 1.3 与第一阶段的关系
+
+```
+第一阶段 (NLU)              第二阶段 (DST)
+     ↓                           ↓
+理解用户意图        →      跟踪对话状态
+提取参数信息        →      维护槽位值
+简单会话管理        →      复杂状态管理
+内存存储           →      Redis持久化
+```
+
+
+
+## DST核心概念
+
+### 六大核心概念详解
+
+1. **DialogState (对话状态)** - 对话的完整快照
+2. **Slot (槽位)** - 信息收集的基本单元
+3. **Context (上下文)** - 对话的历史和环境
+4. **StateStore (状态存储)** - Redis持久化层
+5. **SlotManager (槽位管理器)** - 槽位智能管理
+6. **ContextManager (上下文管理器)** - 上下文生命周期
+
+### 2.1 对话状态 (Dialog State)
+
+对话状态是对话系统在某个时刻的完整"快照"，包含：
+
+```json
+DialogState = {
+    "session_id": "uuid",
+    "user_info": {
+        "phone": "13800138000",
+        "name": "张三",
+        "current_package": "经济套餐"
+    },
+    "current_intent": "query_packages",
+    "slot_values": {
+        "price_max": 100,
+        "data_min": 50
+    },
+    "dialog_history": [
+        {"role": "user", "content": "..."},
+        {"role": "assistant", "content": "..."}
+    ],
+    "context_stack": [...],
+    "timestamp": "2025-01-01 10:00:00",
+    "turn_count": 5
+}
+```
+
+### 2.2 槽位 (Slot)
+
+槽位是需要从用户那里收集的信息：
+
+| 槽位类型     | 示例                  | 特点           |
+| ------------ | --------------------- | -------------- |
+| **必填槽位** | phone, package_name   | 缺失时必须追问 |
+| **可选槽位** | price_max, data_min   | 可以为空       |
+| **系统槽位** | session_id, timestamp | 系统自动填充   |
+| **临时槽位** | confirmation          | 仅在当前轮有效 |
+
+**槽位生命周期**:
+
+```
+创建 → 填充 → 验证 → 使用 → 清理/继承
+  ↓      ↓      ↓      ↓        ↓
+EMPTY REQUESTED FILLED USED CLEARED/INHERITED
+```
+
+示例：
+
+```
+# 轮次1
+用户: "有便宜的套餐吗"
+槽位: {"sort_by": "price_asc"}  # 自动提取
+
+# 轮次2  
+用户: "100元以内"
+槽位: {
+    "sort_by": "price_asc",     # 继承
+    "price_max": 100            # 新增
+}
+
+# 轮次3（意图切换）
+用户: "查我的套餐"
+槽位: {"phone": "13800138000"} # 仅保留用户信息
+```
+
+### 2.3 上下文管理 (Context)
+
+**定义**: 对话的历史信息和环境信息
+
+**作用**:
+
+-  提供历史对话参考
+-  支持上下文理解和推理
+-  连接多轮对话的逻辑
+
+**上下文类型**:
+
+1. **短期上下文** - 当前对话轮次
+2. **中期上下文** - 当前会话
+3. **长期上下文** - 用户历史记录
+
+```
+┌─────────────────────────────────────┐
+│          上下文层次结构              │
+├─────────────────────────────────────┤
+│ 1. 短期上下文 (当前轮次)             │
+│    - 当前用户输入                    │
+│    - 当前NLU结果                     │
+│                                      │
+│ 2. 中期上下文 (当前会话)             │
+│    - 最近N轮对话历史                 │
+│    - 当前意图和槽位                  │
+│                                      │
+│ 3. 长期上下文 (用户画像)             │
+│    - 用户基本信息                    │
+│    - 历史偏好                        │
+│    - 使用习惯                        │
+└─────────────────────────────────────┘
+```
+
+**上下文继承规则**:
+
+```
+# 规则1: 槽位继承
+用户: "查下我的套餐"
+系统: "请问手机号？"
+用户: "13800138000"  # phone槽位填充
+# 后续对话中phone槽位自动继承
+
+# 规则2: 意图切换
+用户: "有100元以内的套餐吗"  # intent: query_packages
+系统: [展示套餐列表]
+用户: "我现在用的是什么套餐"  # intent切换: query_current_package
+# phone槽位继承，但其他槽位清空
+```
+
+**上下文栈结构**:
+
+```
+context_stack = [
+    {
+        "type": "intent_context",
+        "intent": "query_packages",
+        "slots": {"price_max": 100},
+        "timestamp": "2025-01-01 10:00:00",
+        "turn_id": 3
+    },
+    {
+        "type": "user_context", 
+        "phone": "13800138000",
+        "preferences": {
+            "favorite_package": "经济套餐"
+        }
+    }
+]
+```
+
+**上下文管理规则**:
+
+- ⏰ **时间衰减**: 超过5分钟的上下文自动清理
+- 📏 **大小限制**: 最多保留10个上下文项
+- 🎯 **优先级**: 用户信息 > 当前意图 > 历史意图
+
+
+
+### 2.4 StateStore (状态存储)
+
+**定义**: 状态的持久化存储层
+
+**作用**:
+
+- 💾 持久化保存对话状态
+- 🚀 快速读写状态数据
+- 🔄 支持应用重启后恢复
+
+**存储策略**:
+
+```
+┌─────────────┐
+│   第一阶段   │  内存存储 (dict)
+│   NLU模块    │  - 快速但易丢失
+└─────────────┘  - 不支持分布式
+        ↓
+┌─────────────┐
+│   第二阶段   │  Redis存储 ⭐
+│   DST模块    │  - 持久化
+└─────────────┘  - 高性能
+                 - 支持过期
+                 - 支持分布式
+```
+
+**Redis数据结构设计**:
+
+```
+# 1. 会话状态 (Hash)
+Key: session:{session_id}:state
+Fields:
+  - current_intent: "query_packages"
+  - turn_count: "5"
+  - user_phone: "13800138000"
+  - slots: "{\"price_max\": 100}"
+  - history: "[...]"
+  - context_stack: "[...]"
+TTL: 1800秒 (30分钟)
+
+# 2. 用户会话列表 (Set)
+Key: user:{phone}:sessions
+Members: [session_id_1, session_id_2, ...]
+TTL: 604800秒 (7天)
+
+# 3. 会话元数据 (String)
+Key: session:{session_id}:meta
+Value: "{\"created_at\": \"...\", \"last_active\": \"...\"}"
+TTL: 1800秒
+```
+
+
+
+### 2.5 SlotManager (槽位管理器)
+
+**定义**: 管理槽位的填充、验证和继承
+
+**作用**:
+
+- 🔄 智能槽位继承
+- ✅ 槽位完整性验证
+- 🧹 槽位清理策略
+
+**核心功能**:
+
+#### 2.5.1 槽位填充
+
+```python
+def fill_slots(current_slots, new_slots, intent_changed):
+    if not intent_changed:
+        # 意图不变：完全合并
+        return {**current_slots, **new_slots}
+    elif 同领域:
+        # 相同领域：保留用户信息 + 部分业务槽位
+        return {**user_info_slots, **new_slots}
+    else:
+        # 不同领域：仅保留用户信息
+        return {**user_info_only, **new_slots}
+```
+
+#### 2.5.2 槽位继承规则
+
+| 场景     | 策略                  | 示例                            |
+| -------- | --------------------- | ------------------------------- |
+| 意图不变 | 全部继承              | query_packages → query_packages |
+| 相同领域 | 保留用户信息+部分业务 | query_packages → change_package |
+| 不同领域 | 仅保留用户信息        | query_packages → query_usage    |
+| 明确重置 | 清空所有              | 用户说"重新开始"                |
+
+#### 2.5.3 槽位验证
+
+```python
+def validate_slots(slots, required_slots):
+    missing = []
+    for slot in required_slots:
+        if slot not in slots or slots[slot] is None:
+            missing.append(slot)
+    return missing
+```
+
+### 2.6 ContextManager (上下文管理器)
+
+**定义**: 管理对话上下文的生命周期
+
+**作用**:
+
+- 📝 维护上下文栈
+- 🧹 清理过期上下文
+- 🔍 提取上下文信息
+
+**核心算法**:
+
+#### 2.6.1 上下文更新
+
+```python
+def update_context(context_stack, nlu_result):
+    # 1. 清理过期上下文
+    context_stack = clean_expired(context_stack)
+    
+    # 2. 添加新上下文
+    new_context = {
+        "intent": nlu_result.intent,
+        "parameters": nlu_result.parameters,
+        "timestamp": now()
+    }
+    context_stack.append(new_context)
+    
+    # 3. 限制栈大小
+    if len(context_stack) > 10:
+        context_stack = context_stack[-10:]
+    
+    return context_stack
+```
+
+#### 2.6.2 上下文清理
+
+```python
+def clean_expired_context(context_stack, ttl=300):
+    now = datetime.now()
+    threshold = now - timedelta(seconds=ttl)
+    
+    return [
+        ctx for ctx in context_stack
+        if ctx['timestamp'] > threshold
+    ]
+```
+
+
+
+
+
+## 系统架构设计
+
+###  整体架构图
+
+```
+┌─────────────────────────────────────────────────────┐
+│                   用户交互层                          │
+└─────────────────────────────────────────────────────┘
+                         ↓
+┌─────────────────────────────────────────────────────┐
+│                  对话管理器                           │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐         │
+│  │SessionMgr│→│   NLU    │→│   DST    │ ⭐新增   │
+│  └──────────┘  └──────────┘  └──────────┘         │
+└─────────────────────────────────────────────────────┘
+                         ↓
+┌─────────────────────────────────────────────────────┐
+│              DST核心模块 (第二阶段)                   │
+│  ┌────────────────────────────────────────────┐    │
+│  │         DialogStateTracker                  │    │
+│  │  - 状态维护                                 │    │
+│  │  - 槽位管理                                 │    │
+│  │  - 上下文处理                               │    │
+│  └────────────────────────────────────────────┘    │
+│                         ↓                           │
+│  ┌────────────────────────────────────────────┐    │
+│  │         StateStore (Redis)                  │    │
+│  │  - 会话持久化                               │    │
+│  │  - 快速读写                                 │    │
+│  │  - 过期管理                                 │    │
+│  └────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────┘
+                         ↓
+┌─────────────────────────────────────────────────────┐
+│                  执行层 + Policy                      │
+└─────────────────────────────────────────────────────┘
+```
+
+### 3.2 DST模块分层
+
+```
+┌─────────────────────────────────────┐
+│      DialogStateTracker (主类)       │
+│  - track()      跟踪状态             │
+│  - update()     更新状态             │
+│  - get_state()  获取状态             │
+│  - reset()      重置状态             │
+└─────────────────────────────────────┘
+              ↓
+┌─────────────────────────────────────┐
+│         StateManager                 │
+│  - 状态初始化                         │
+│  - 状态验证                           │
+│  - 状态转移                           │
+└─────────────────────────────────────┘
+              ↓
+┌─────────────────────────────────────┐
+│         SlotManager                  │
+│  - 槽位填充                           │
+│  - 槽位验证                           │
+│  - 槽位继承                           │
+└─────────────────────────────────────┘
+              ↓
+┌─────────────────────────────────────┐
+│         ContextManager               │
+│  - 上下文提取                         │
+│  - 上下文合并                         │
+│  - 上下文清理                         │
+└─────────────────────────────────────┘
+              ↓
+┌─────────────────────────────────────┐
+│         StateStore (Redis)           │
+│  - save()    保存状态                │
+│  - load()    加载状态                │
+│  - delete()  删除状态                │
+└─────────────────────────────────────┘
+```
+
+
+
+### 3.3 数据流转
+
+#### 3.3.1 完整数据流程
+
+```
+用户输入
+   ↓
+┌─────────────────┐
+│ 1. NLU理解       │  输入: 用户文本
+│                 │  输出: NLUResult
+│ - 意图识别      │        {intent, params, ...}
+│ - 实体提取      │
+└─────────────────┘
+   ↓
+┌─────────────────┐
+│ 2. DST跟踪      │  输入: NLUResult + session_id
+│                 │  
+│ 2.1 加载旧状态  │  ← Redis/内存
+│ 2.2 合并信息    │
+│ 2.3 验证槽位    │
+│ 2.4 更新上下文  │
+│ 2.5 保存状态    │  → Redis/内存
+└─────────────────┘
+   ↓
+┌─────────────────┐
+│ 3. 决策判断     │  输入: DialogState
+│                 │  
+│ if 需要澄清:    │  输出: 追问话术
+│    return 追问   │
+│ else:           │  输出: 执行指令
+│    执行业务     │
+└─────────────────┘
+   ↓
+┌─────────────────┐
+│ 4. 业务执行     │  输入: Function + 参数
+│                 │  
+│ - 查询数据库    │  输出: 业务结果
+│ - 调用API       │
+└─────────────────┘
+   ↓
+┌─────────────────┐
+│ 5. 生成响应     │  输入: 业务结果
+│                 │  
+│ - NLG生成       │  输出: 自然语言响应
+│ - 格式化        │
+└─────────────────┘
+   ↓
+系统响应
+```
+
+#### 3.3.2 DST内部流程
+
+```
+NLUResult输入
+   ↓
+┌──────────────────────────────────┐
+│ Step 1: 加载旧状态                │
+│                                   │
+│ old_state = StateStore.load()    │
+│                                   │
+│ if Redis可用:                     │
+│   从Redis加载                     │
+│ else:                             │
+│   从内存加载                      │
+└──────────────────────────────────┘
+   ↓
+┌──────────────────────────────────┐
+│ Step 2: 判断意图变化              │
+│                                   │
+│ intent_changed = (old_intent !=   │
+│                   new_intent)     │
+└──────────────────────────────────┘
+   ↓
+┌──────────────────────────────────┐
+│ Step 3: 槽位管理                  │
+│                                   │
+│ new_slots = SlotManager.fill(    │
+│   old_slots,                      │
+│   nlu_params,                     │
+│   intent_changed                  │
+│ )                                 │
+└──────────────────────────────────┘
+   ↓
+┌──────────────────────────────────┐
+│ Step 4: 上下文补全                │
+│                                   │
+│ 从context_stack提取用户信息       │
+│ 补全缺失的槽位                    │
+└──────────────────────────────────┘
+   ↓
+┌──────────────────────────────────┐
+│ Step 5: 更新上下文栈              │
+│                                   │
+│ context_stack =                   │
+│   ContextManager.update()         │
+└──────────────────────────────────┘
+   ↓
+┌──────────────────────────────────┐
+│ Step 6: 构建新状态                │
+│                                   │
+│ new_state = DialogState(...)      │
+└──────────────────────────────────┘
+   ↓
+┌──────────────────────────────────┐
+│ Step 7: 验证完整性                │
+│                                   │
+│ missing = validate_slots()        │
+│                                   │
+│ if missing:                       │
+│   state.needs_clarification=True  │
+└──────────────────────────────────┘
+   ↓
+┌──────────────────────────────────┐
+│ Step 8: 保存状态                  │
+│                                   │
+│ StateStore.save(new_state)        │
+│                                   │
+│ → Redis (持久化)                  │
+└──────────────────────────────────┘
+   ↓
+返回DialogState
+```
+
+### 3.4 时序图
+
+#### 3.4.1 单轮对话时序图
+
+```mermaid
+sequenceDiagram
+    participant U as 用户
+    participant C as Chatbot
+    participant N as NLU引擎
+    participant D as DST跟踪器
+    participant S as StateStore
+    participant E as Executor
+    
+    U->>C: "有100元以内的套餐吗"
+    
+    C->>N: understand(user_input)
+    N->>N: 意图识别+实体提取
+    N-->>C: NLUResult{intent, params}
+    
+    C->>D: track(session_id, nlu_result)
+    
+    D->>S: load(session_id)
+    S-->>D: old_state
+    
+    D->>D: 合并槽位
+    D->>D: 验证完整性
+    
+    alt 槽位完整
+        D->>S: save(new_state)
+        D-->>C: state{needs_clarification=False}
+        
+        C->>E: execute_function(intent, slots)
+        E-->>C: result{data}
+        
+        C->>C: 生成响应
+        C-->>U: "为您找到1个套餐..."
+    else 槽位缺失
+        D-->>C: state{needs_clarification=True}
+        C-->>U: "请问您的手机号是？"
+    end
+```
+
+#### 3.4.2 多轮对话时序图
+
+```mermaid
+sequenceDiagram
+    participant U as 用户
+    participant C as Chatbot
+    participant D as DST
+    participant S as Redis
+    
+    Note over U,S: 第1轮：查询套餐
+    U->>C: "有100元以内的套餐吗"
+    C->>D: track()
+    D->>S: load() → 空状态
+    D->>D: 创建state{price_max:100}
+    D->>S: save()
+    D-->>C: state
+    C-->>U: [展示套餐列表]
+    
+    Note over U,S: 第2轮：继续筛选
+    U->>C: "流量要50G以上"
+    C->>D: track()
+    D->>S: load() → 获取旧状态
+    D->>D: 合并slots{price_max:100, data_min:50}
+    D->>S: save()
+    D-->>C: state
+    C-->>U: [展示筛选后套餐]
+    
+    Note over U,S: 第3轮：意图切换
+    U->>C: "查我的套餐"
+    C->>D: track()
+    D->>S: load()
+    D->>D: 意图改变，清空业务槽位
+    D->>D: 检测缺少phone
+    D->>S: save()
+    D-->>C: state{missing:[phone]}
+    C-->>U: "请问您的手机号？"
+    
+    Note over U,S: 第4轮：补充信息
+    U->>C: "13800138000"
+    C->>D: track()
+    D->>S: load()
+    D->>D: 填充phone槽位
+    D->>S: save()
+    D-->>C: state{complete}
+    C-->>U: [展示当前套餐信息]
+```
+
+#### 3.4.3 状态持久化时序图
+
+```mermaid
+sequenceDiagram
+    participant C1 as Chatbot实例1
+    participant D as DST
+    participant R as Redis
+    participant C2 as Chatbot实例2
+    
+    Note over C1,R: 会话进行中
+    C1->>D: track(session_001)
+    D->>R: SAVE session:001:state
+    R-->>D: OK
+    
+    Note over C1,C2: 应用重启
+    
+    Note over C2,R: 恢复会话
+    C2->>D: track(session_001)
+    D->>R: GET session:001:state
+    R-->>D: state_data
+    D->>D: 反序列化状态
+    D-->>C2: DialogState(恢复成功)
+    
+    Note over R: 自动过期
+    R->>R: TTL倒计时
+    R->>R: 30分钟后自动删除
+```
+
+#### 3.4.4 槽位继承时序图
+
+```mermaid
+sequenceDiagram
+    participant U as 用户
+    participant SM as SlotManager
+    participant CS as CurrentSlots
+    participant NS as NewSlots
+    
+    Note over U,NS: 场景1: 意图不变
+    U->>SM: 当前slots{price_max:100}
+    U->>SM: 新参数{data_min:50}
+    SM->>SM: 检测意图未变
+    SM->>CS: 保留所有旧槽位
+    SM->>NS: 添加新槽位
+    SM-->>U: {price_max:100, data_min:50}
+    
+    Note over U,NS: 场景2: 同领域意图切换
+    U->>SM: 当前slots{price_max:100, phone:138...}
+    U->>SM: 切换到change_package
+    SM->>SM: 检测同领域
+    SM->>CS: 保留phone+部分业务槽位
+    SM-->>U: {phone:138...}
+    
+    Note over U,NS: 场景3: 跨领域切换  
+    U->>SM: 当前slots{price_max:100, phone:138...}
+    U->>SM: 切换到query_usage
+    SM->>SM: 检测跨领域
+    SM->>CS: 仅保留用户信息
+    SM-->>U: {phone:138...}
+```
+
+
+
+## 详细设计方案
+
+### 4.1 核心功能需求
+
+#### 4.1.1 状态跟踪
+
+**功能描述**: 跟踪和记录对话的完整状态
+
+**场景示例**:
+
+```
+轮次1:
+用户: "有便宜的套餐吗"
+DST状态: {
+  "intent": "query_packages",
+  "slots": {"sort_by": "price_asc"},
+  "turn": 1
+}
+
+轮次2:
+用户: "100元以内的"
+DST状态: {
+  "intent": "query_packages",  # 继承
+  "slots": {
+    "sort_by": "price_asc",    # 继承
+    "price_max": 100            # 新增
+  },
+  "turn": 2
+}
+```
+
+####  4.1.2 槽位管理
+
+**槽位生命周期**:
+
+```
+槽位状态机:
+EMPTY → REQUESTED → FILLED → CONFIRMED
+  ↑                              ↓
+  └──────────── CLEARED ─────────┘
+```
+
+**槽位继承策略**:
+
+| 场景               | 策略               |
+| ------------------ | ------------------ |
+| 意图不变           | 所有槽位继承       |
+| 意图切换，相同领域 | 用户信息槽位继承   |
+| 意图切换，不同领域 | 仅保留用户基本信息 |
+| 明确取消           | 清空所有槽位       |
+
+#### 4.1.3 上下文管理
+
+**上下文栈设计**:
+
+```
+context_stack = [
+    {
+        "type": "intent_context",
+        "intent": "query_packages",
+        "slots": {...},
+        "created_at": "..."
+    },
+    {
+        "type": "user_context",
+        "phone": "13800138000",
+        "preferences": {...}
+    }
+]
+```
+
+**上下文清理规则**:
+
+* 超过5轮未使用 → 清理
+
+* 意图完全切换 → 清理旧意图上下文
+
+* 用户明确重置 → 全部清理
+
+
+
+#### 4.1.4 会话持久化
+
+**Redis存储方案**:
+
+```
+Key设计:
+- session:{session_id}:state          # 对话状态
+- session:{session_id}:history        # 对话历史
+- session:{session_id}:slots          # 槽位值
+- user:{phone}:sessions               # 用户会话列表
+- user:{phone}:profile                # 用户画像
+
+过期策略:
+- 活跃会话: 30分钟无操作后过期
+- 历史记录: 7天后过期
+- 用户画像: 永久保存
+```
+
+### 4.2 状态转移逻辑
+
+状态转移图
+
+```
+[开始会话]
+     ↓
+[初始化状态]
+     ↓
+[接收用户输入] ←─────┐
+     ↓               │
+[NLU理解]           │
+     ↓               │
+[加载旧状态]         │
+     ↓               │
+[合并新信息]         │
+     ↓               │
+[验证完整性]         │
+     ↓               │
+  完整？             │
+     ├─ 否 → [追问] ─┘
+     └─ 是
+        ↓
+   [执行动作]
+        ↓
+   [更新状态]
+        ↓
+   [保存状态]
+        ↓
+     继续？
+     ├─ 是 → [接收用户输入]
+     └─ 否 → [结束会话]
+```
+
+
+
+### 4.3 错误处理和恢复
+
+异常场景处理
+
+| 异常场景      | 处理策略                |
+| ------------- | ----------------------- |
+| Redis连接失败 | 降级到内存存储          |
+| 状态数据损坏  | 重新初始化状态          |
+| 槽位冲突      | 以最新值为准            |
+| 会话超时      | 提示用户并重新开始      |
+| 并发更新      | 使用Redis事务保证一致性 |
+
+状态回滚
+
+```
+# 支持状态回滚到上一轮
+def rollback(session_id, steps=1):
+    """回滚状态"""
+    history = load_state_history(session_id)
+    target_state = history[-steps]
+    save_state(session_id, target_state)
+```
+
+
+
+## 技术实现
+
+### 5.1 技术选型
+
+| 组件         | 技术选型       | 理由                       |
+| ------------ | -------------- | -------------------------- |
+| **状态存储** | Redis          | 高性能、支持过期、原子操作 |
+| **序列化**   | JSON           | 可读性好、兼容性强         |
+| **并发控制** | Redis事务      | 保证状态一致性             |
+| **连接池**   | redis-py连接池 | 提高性能                   |
+
+### 5.2 Redis数据结构
+
+#### 5.2.1 对话状态
+
+```
+# Hash结构存储对话状态
+HSET session:{session_id}:state
+  current_intent "query_packages"
+  turn_count "3"
+  created_at "2025-01-01 10:00:00"
+  updated_at "2025-01-01 10:05:00"
+
+EXPIRE session:{session_id}:state 1800  # 30分钟过期
+```
+
+#### 5.2.2 槽位值
+
+```
+# Hash结构存储槽位
+HSET session:{session_id}:slots
+  phone "13800138000"
+  price_max "100"
+  data_min "50"
+
+EXPIRE session:{session_id}:slots 1800
+```
+
+#### 5.2.3 对话历史
+
+```
+# List结构存储历史
+LPUSH session:{session_id}:history
+  '{"role":"user","content":"...","timestamp":"..."}'
+
+# 限制历史长度
+LTRIM session:{session_id}:history 0 19  # 保留最近20条
+
+EXPIRE session:{session_id}:history 1800
+```
+
+#### 5.2.4 用户会话列表
+
+```
+# Set结构存储用户的所有会话
+SADD user:{phone}:sessions
+  "session_id_1"
+  "session_id_2"
+
+EXPIRE user:{phone}:sessions 604800  # 7天过期
+```
+
+### 5.3 核心算法
+
+#### 5.3.1 槽位填充算法
+
+```
+def fill_slots(current_slots, new_slots, intent_changed):
+    """
+    槽位填充算法
+    
+    策略:
+    1. 新槽位直接覆盖
+    2. 意图未变，保留旧槽位
+    3. 意图改变，仅保留用户信息槽位
+    """
+    if intent_changed:
+        # 仅保留用户信息槽位
+        user_slots = {
+            k: v for k, v in current_slots.items()
+            if k in ['phone', 'name']
+        }
+        result = {**user_slots, **new_slots}
+    else:
+        # 合并槽位，新值覆盖旧值
+        result = {**current_slots, **new_slots}
+    
+    return result
+```
+
+#### 5.3.2 上下文继承算法
+
+```
+def inherit_context(old_context, new_intent):
+    """
+    上下文继承算法
+    
+    规则:
+    - 相同意图: 完全继承
+    - 不同意图: 继承用户信息
+    - 新会话: 不继承
+    """
+    if not old_context:
+        return {}
+    
+    old_intent = old_context.get('intent')
+    
+    if old_intent == new_intent:
+        # 完全继承
+        return old_context
+    elif is_same_domain(old_intent, new_intent):
+        # 继承用户信息
+        return {
+            'phone': old_context.get('phone'),
+            'user_profile': old_context.get('user_profile')
+        }
+    else:
+        # 不继承
+        return {}
+```
+
+## 数据结构设计
+
+### 6.1 DialogState 类
+
+```
+@dataclass
+class DialogState:
+    """对话状态"""
+    session_id: str
+    user_phone: Optional[str] = None
+    current_intent: Optional[str] = None
+    previous_intent: Optional[str] = None
+    
+    # 槽位值
+    slots: Dict[str, Any] = field(default_factory=dict)
+    
+    # 对话历史
+    history: List[DialogTurn] = field(default_factory=list)
+    
+    # 上下文栈
+    context_stack: List[Dict] = field(default_factory=list)
+    
+    # 元数据
+    turn_count: int = 0
+    created_at: datetime = field(default_factory=datetime.now)
+    updated_at: datetime = field(default_factory=datetime.now)
+    
+    # 状态标志
+    is_completed: bool = False
+    needs_clarification: bool = False
+    missing_slots: List[str] = field(default_factory=list)
+```
+
+### 6.2 DialogTurn 类
+
+```
+@dataclass
+class DialogTurn:
+    """对话轮次"""
+    turn_id: int
+    role: str  # 'user' or 'assistant'
+    content: str
+    intent: Optional[str] = None
+    entities: Dict[str, Any] = field(default_factory=dict)
+    timestamp: datetime = field(default_factory=datetime.now)
+```
+
+### 6.3 SlotValue 类
+
+```
+@dataclass
+class SlotValue:
+    """槽位值"""
+    name: str
+    value: Any
+    confidence: float = 1.0
+    source: str = "user"  # user/system/inherited
+    filled_at: datetime = field(default_factory=datetime.now)
+    is_confirmed: bool = False
+```
+
+## 核心代码实现
+
+### 7.1 目录结构
+
+```
+core/dst/
+├── __init__.py
+├── dialog_state.py          # 对话状态数据类
+├── dialog_state_tracker.py  # 状态跟踪器
+├── state_manager.py         # 状态管理器
+├── slot_manager.py          # 槽位管理器
+├── context_manager.py       # 上下文管理器
+└── state_store.py           # Redis存储
+
+database/
+└── redis_manager.py         # Redis连接管理
+```
+
+### 7.2 DialogStateTracker 主类
+
+```
+class DialogStateTracker:
+    """对话状态跟踪器"""
+    
+    def __init__(self):
+        self.state_store = StateStore()
+        self.state_manager = StateManager()
+        self.slot_manager = SlotManager()
+        self.context_manager = ContextManager()
+    
+    def track(self, session_id: str, nlu_result: NLUResult) -> DialogState:
+        """
+        跟踪对话状态
+        
+        Args:
+            session_id: 会话ID
+            nlu_result: NLU解析结果
+        
+        Returns:
+            更新后的对话状态
+        """
+        # 1. 加载旧状态
+        old_state = self.state_store.load(session_id)
+        
+        # 2. 创建新轮次
+        turn = self._create_turn(nlu_result)
+        
+        # 3. 更新意图
+        new_intent = nlu_result.intent
+        intent_changed = (old_state.current_intent != new_intent)
+        
+        # 4. 更新槽位
+        new_slots = self.slot_manager.fill_slots(
+            old_state.slots,
+            nlu_result.parameters,
+            intent_changed
+        )
+        
+        # 5. 更新上下文
+        new_context = self.context_manager.update_context(
+            old_state.context_stack,
+            nlu_result
+        )
+        
+        # 6. 构建新状态
+        new_state = DialogState(
+            session_id=session_id,
+            user_phone=old_state.user_phone or nlu_result.parameters.get('phone'),
+            current_intent=new_intent,
+            previous_intent=old_state.current_intent,
+            slots=new_slots,
+            history=old_state.history + [turn],
+            context_stack=new_context,
+            turn_count=old_state.turn_count + 1,
+            updated_at=datetime.now()
+        )
+        
+        # 7. 验证完整性
+        self._validate_state(new_state)
+        
+        # 8. 保存状态
+        self.state_store.save(session_id, new_state)
+        
+        return new_state
+    
+    def get_state(self, session_id: str) -> DialogState:
+        """获取对话状态"""
+        return self.state_store.load(session_id)
+    
+    def reset_state(self, session_id: str):
+        """重置对话状态"""
+        self.state_store.delete(session_id)
+```
+
+### 7.3 StateStore (Redis存储)
+
+```
+class StateStore:
+    """状态存储 - Redis实现"""
+    
+    def __init__(self):
+        self.redis = redis_manager.get_client()
+        self.ttl = settings.SESSION_TIMEOUT  # 30分钟
+    
+    def save(self, session_id: str, state: DialogState):
+        """保存状态"""
+        key = f"session:{session_id}:state"
+        
+        # 序列化状态
+        state_data = {
+            "session_id": state.session_id,
+            "user_phone": state.user_phone,
+            "current_intent": state.current_intent,
+            "previous_intent": state.previous_intent,
+            "slots": json.dumps(state.slots),
+            "history": json.dumps([asdict(t) for t in state.history], default=str),
+            "context_stack": json.dumps(state.context_stack),
+            "turn_count": state.turn_count,
+            "created_at": state.created_at.isoformat(),
+            "updated_at": state.updated_at.isoformat()
+        }
+        
+        # 保存到Redis
+        pipe = self.redis.pipeline()
+        pipe.delete(key)
+        pipe.hmset(key, state_data)
+        pipe.expire(key, self.ttl)
+        pipe.execute()
+    
+    def load(self, session_id: str) -> DialogState:
+        """加载状态"""
+        key = f"session:{session_id}:state"
+        data = self.redis.hgetall(key)
+        
+        if not data:
+            # 返回新状态
+            return DialogState(session_id=session_id)
+        
+        # 反序列化
+        return DialogState(
+            session_id=session_id,
+            user_phone=data.get('user_phone'),
+            current_intent=data.get('current_intent'),
+            previous_intent=data.get('previous_intent'),
+            slots=json.loads(data.get('slots', '{}')),
+            history=[DialogTurn(**t) for t in json.loads(data.get('history', '[]'))],
+            context_stack=json.loads(data.get('context_stack', '[]')),
+            turn_count=int(data.get('turn_count', 0)),
+            created_at=datetime.fromisoformat(data.get('created_at')),
+            updated_at=datetime.fromisoformat(data.get('updated_at'))
+        )
+    
+    def delete(self, session_id: str):
+        """删除状态"""
+        key = f"session:{session_id}:state"
+        self.redis.delete(key)
+```
+
+## 与第一阶段集成
+
+### 8.1 集成架构
+
+```
+┌─────────────────────────────────────┐
+│      TelecomChatbotPhase2            │
+├─────────────────────────────────────┤
+│  def chat(user_input, session_id):  │
+│    1. nlu_result = NLU.understand() │ ← 第一阶段
+│    2. state = DST.track()           │ ← 第二阶段 ⭐
+│    3. action = Policy.decide()      │ ← 第三阶段
+│    4. result = Executor.execute()   │ ← 第一阶段
+│    5. response = NLG.generate()     │ ← 第三阶段
+│    return response                  │
+└─────────────────────────────────────┘
+```
+
+### 8.2 修改点
+
+#### 1. 修改 `core/chatbot_phase1.py` → `core/chatbot_phase2.py`
+
+```
+class TelecomChatbotPhase2:
+    """第二阶段对话系统 - 增加DST"""
+    
+    def __init__(self):
+        self.nlu = NLUEngine()
+        self.dst = DialogStateTracker()  # ⭐ 新增
+        self.db_executor = DatabaseExecutor()
+    
+    def chat(self, user_input, session_id=None, user_phone=None):
+        # 1. NLU理解
+        nlu_result = self.nlu.understand(user_input, session_id, user_phone)
+        
+        # 2. DST状态跟踪 ⭐ 新增
+        dialog_state = self.dst.track(session_id, nlu_result)
+        
+        # 3. 检查完整性
+        if dialog_state.needs_clarification:
+            return {
+                "response": self._get_clarification_message(dialog_state),
+                "state": dialog_state,
+                "requires_input": True
+            }
+        
+        # 4. 执行查询（使用DST中的槽位）
+        exec_result = self.db_executor.execute_function(
+            dialog_state.current_intent,
+            dialog_state.slots  # ⭐ 使用DST维护的槽位
+        )
+        
+        # 5. 生成响应
+        response_text = self._generate_response(exec_result)
+        
+        return {
+            "response": response_text,
+            "state": dialog_state,
+            "data": exec_result,
+            "requires_input": False
+        }
+```
+
+## 测试方案
+
+### 9.1 单元测试
+
+```
+# tests/test_dst.py
+
+def test_slot_filling():
+    """测试槽位填充"""
+    dst = DialogStateTracker()
+    
+    # 第一轮
+    nlu_result1 = NLUResult(
+        intent="query_packages",
+        parameters={"sort_by": "price_asc"}
+    )
+    state1 = dst.track("test_session", nlu_result1)
+    assert state1.slots["sort_by"] == "price_asc"
+    
+    # 第二轮 - 添加新槽位
+    nlu_result2 = NLUResult(
+        intent="query_packages",
+        parameters={"price_max": 100}
+    )
+    state2 = dst.track("test_session", nlu_result2)
+    assert state2.slots["sort_by"] == "price_asc"  # 继承
+    assert state2.slots["price_max"] == 100  # 新增
+
+
+def test_intent_switch():
+    """测试意图切换"""
+    dst = DialogStateTracker()
+    
+    # 设置初始状态
+    nlu_result1 = NLUResult(
+        intent="query_packages",
+        parameters={"price_max": 100, "phone": "13800138000"}
+    )
+    state1 = dst.track("test_session", nlu_result1)
+    
+    # 意图切换
+    nlu_result2 = NLUResult(
+        intent="query_current_package",
+        parameters={}
+    )
+    state2 = dst.track("test_session", nlu_result2)
+    
+    # phone应该继承，但price_max应该清除
+    assert state2.slots.get("phone") == "13800138000"
+    assert "price_max" not in state2.slots
+
+
+def test_state_persistence():
+    """测试状态持久化"""
+    dst = DialogStateTracker()
+    session_id = "test_persist"
+    
+    # 保存状态
+    nlu_result = NLUResult(
+        intent="query_packages",
+        parameters={"price_max": 100}
+    )
+    state1 = dst.track(session_id, nlu_result)
+    
+    # 重新加载
+    state2 = dst.get_state(session_id)
+    assert state2.slots["price_max"] == 100
+    assert state2.turn_count == 1
+```
+
+### 9.2 集成测试
+
+```
+# tests/test_dst_integration.py
+
+def test_multi_turn_conversation():
+    """测试多轮对话"""
+    chatbot = TelecomChatbotPhase2()
+    session_id = "integration_test"
+    
+    # 第一轮
+    response1 = chatbot.chat(
+        "有100元以内的套餐吗",
+        session_id=session_id
+    )
+    assert "100元" in response1["response"]
+    
+    # 第二轮 - 继续筛选
+    response2 = chatbot.chat(
+        "流量要50G以上",
+        session_id=session_id
+    )
+    # price_max应该保持，data_min应该新增
+    state = response2["state"]
+    assert state.slots["price_max"] == 100
+    assert state.slots["data_min"] == 50
+
+
+def test_context_inheritance():
+    """测试上下文继承"""
+    chatbot = TelecomChatbotPhase2()
+    session_id = "context_test"
+    
+    # 查询套餐时填充手机号
+    response1 = chatbot.chat(
+        "查下我的套餐",
+        session_id=session_id
+    )
+    assert response1["requires_input"]
+    
+    response2 = chatbot.chat(
+        "13800138000",
+        session_id=session_id
+    )
+    
+    # 切换到查询使用情况，手机号应该继承
+    response3 = chatbot.chat(
+        "我用了多少流量",
+        session_id=session_id
+    )
+    assert not response3["requires_input"]  # 不需要再问手机号
+```
+
+
+
+## 总结
+
+第二阶段DST模块为对话系统提供了：
+
+✅ **完整的状态跟踪** - 记录对话的完整历史
+ ✅ **智能的槽位管理** - 自动继承和清理
+ ✅ **强大的上下文处理** - 支持复杂多轮对话
+ ✅ **可靠的持久化** - Redis存储，支持恢复
+ ✅ **良好的可扩展性** - 为第三阶段打下基础
+
+**下一步**: 第三阶段将实现Policy（对话策略）和NLG（自然语言生成），让对话更加智能和流畅。
+
+
+
+
+
+
+
+
+
+
+
+
+
+

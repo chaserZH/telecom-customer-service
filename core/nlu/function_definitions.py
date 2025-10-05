@@ -56,10 +56,14 @@ FUNCTION_DEFINITIONS =[
         }
     },
     {
-        "type":"function",
+        "type": "function",
         "function": {
             "name": "query_current_package",
-            "description": "查询用户当前使用的套餐信息。当用户询问'我现在是什么套餐'、'我的套餐'、'当前套餐'时使用",
+            "description": "查询用户当前使用的套餐信息。当用户询问以下问题时使用：\n"
+                           "- '我现在是什么套餐' / '我的套餐' / '当前套餐'\n"
+                           "- '查下我的套餐' / '看看我的套餐'\n"  
+                           "- '我用的什么套餐' / '帮我查套餐'\n"
+                           "需要用户提供手机号",
             "parameters": {
                 "type": "object",
                 "properties": {

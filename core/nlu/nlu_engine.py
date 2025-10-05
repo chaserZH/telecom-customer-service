@@ -138,11 +138,42 @@ class NLUEngine:
             }
         return self.sessions[session_id]
 
+    # 在NLU引擎中添加示例（修改 core/nlu/nlu_engine.py）：
     def _build_messages(self, user_input: str, context: Dict) -> List[Dict]:
         """构建消息列表"""
-        messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+        messages = [
+            {"role": "system", "content": SYSTEM_PROMPT},
+            # ⭐ 添加few-shot示例
+            {"role": "user", "content": "查下我的套餐"},
+            {"role": "assistant", "content": "", "tool_calls": [
+                {
+                    "id": "call_example",
+                    "type": "function",
+                    "function": {
+                        "name": "query_current_package",
+                        "arguments": "{}"
+                    }
+                }
+            ]},
+            {"role": "user", "content": "有什么套餐"},
+            {"role": "assistant", "content": "", "tool_calls": [
+                {
+                    "id": "call_example2",
+                    "type": "function",
+                    "function": {
+                        "name": "query_packages",
+                        "arguments": "{}"
+                    }
+                }
+            ]},
+        ]
+
+        # 添加历史消息
         messages.extend(context.get("history", [])[-10:])
+
+        # 添加当前用户输入
         messages.append({"role": "user", "content": user_input})
+
         return messages
 
     def _parse_response(self, response, context: Dict) -> NLUResult:
