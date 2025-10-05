@@ -100,7 +100,7 @@ class NLUEngine:
                 model=self.model,
                 messages=messages,
                 tools=FUNCTION_DEFINITIONS,
-                tool_choice="auto",  # ⭐ 强制调用工具
+                tool_choice="required",  # ⭐ 强制调用工具
                 temperature=0.3
             )
 
@@ -184,6 +184,7 @@ class NLUEngine:
 
     def _parse_response(self, response, context: Dict) -> NLUResult:
         """解析响应"""
+        logger.info(f"[response {response}] context: {context}")
         message = response.choices[0].message
 
         if message.tool_calls:

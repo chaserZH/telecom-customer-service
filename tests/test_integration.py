@@ -120,7 +120,7 @@ class TestDSTIntegration:
 
     def test_intent_switch_clears_slots(self, chatbot):
         """测试意图切换时清空槽位"""
-        session_id = "integration_test_003"
+        session_id = "integration_test_004"
 
         # 第一轮: 查询套餐
         response1 = chatbot.chat(

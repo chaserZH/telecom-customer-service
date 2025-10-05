@@ -821,3 +821,107 @@
 2025-10-05 19:45:15.026 | INFO     | executor.db_executor:execute_function:50 - Function执行成功: query_packages
 2025-10-05 19:45:15.027 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: integration_test_003
 2025-10-05 19:45:15.027 | INFO     | core.chatbot_dst:_log_conversation:234 - [integration_test_003] 对话完成 | 意图: query_packages | 轮次: 4 | 耗时: 2771ms
+2025-10-05 19:50:18.629 | INFO     | database.db_manager:_initialize:38 - 数据库连接初始化成功
+2025-10-05 19:50:18.630 | ERROR    | database.redis_manager:_initialize:45 - Redis连接池初始化失败: 'Settings' object has no attribute 'get'
+2025-10-05 19:50:18.728 | INFO     | core.nlu.nlu_engine:__init__:53 - ✓ NLU引擎初始化成功: DeepSeek (deepseek-chat)
+2025-10-05 19:50:18.729 | ERROR    | core.dst.state_store:__init__:28 - Redis初始化失败: Redis连接池未初始化, 使用内存存储
+2025-10-05 19:50:18.729 | INFO     | core.dst.dialog_state_tracker:__init__:27 - 对话状态跟踪器初始化完成
+2025-10-05 19:50:18.729 | INFO     | executor.db_executor:__init__:16 - 数据库执行器初始化完成
+2025-10-05 19:50:18.729 | INFO     | core.chatbot_dst:__init__:23 - 第二阶段对话系统初始化完成（含DST支持）
+2025-10-05 19:50:18.730 | INFO     | core.chatbot_dst:chat:46 - [integration_test_003] 收到用户输入: 100元以内的套餐
+2025-10-05 19:50:18.730 | INFO     | core.nlu.nlu_engine:understand:83 - [integration_test_003] 开始NLU理解: 100元以内的套餐
+2025-10-05 19:50:18.730 | DEBUG    | core.nlu.nlu_engine:understand:88 - [integration_test_003] 预处理后: 100元以内的套餐
+2025-10-05 19:50:22.308 | INFO     | core.nlu.nlu_engine:understand:113 - [integration_test_003] NLU完成: intent=query_packages
+2025-10-05 19:50:22.308 | INFO     | core.dst.dialog_state_tracker:track:40 - [DST] 开始跟踪会话: integration_test_003
+2025-10-05 19:50:22.308 | DEBUG    | core.dst.state_store:_load_from_memory:121 - 内存中不存在会话: integration_test_003, 返回新状态
+2025-10-05 19:50:22.308 | INFO     | core.dst.dialog_state_tracker:track:59 - 意图改变: None → query_packages
+2025-10-05 19:50:22.308 | DEBUG    | core.dst.slot_manager:fill_slots:61 - 不同领域，仅保留用户信息: []
+2025-10-05 19:50:22.309 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: integration_test_003
+2025-10-05 19:50:22.309 | INFO     | core.dst.dialog_state_tracker:track:112 - [DST] 状态跟踪完成: turn=1, 需要澄清=False
+2025-10-05 19:50:22.309 | INFO     | executor.db_executor:execute_function:29 - 执行Function: query_packages, 参数: {'price_max': 100, 'sort_by': 'price_asc'}
+2025-10-05 19:50:22.373 | INFO     | executor.db_executor:execute_function:50 - Function执行成功: query_packages
+2025-10-05 19:50:22.373 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: integration_test_003
+2025-10-05 19:50:22.373 | INFO     | core.chatbot_dst:_log_conversation:234 - [integration_test_003] 对话完成 | 意图: query_packages | 轮次: 2 | 耗时: 3644ms
+2025-10-05 19:50:22.373 | INFO     | core.chatbot_dst:chat:46 - [integration_test_003] 收到用户输入: 查询我的流量使用情况
+2025-10-05 19:50:22.374 | INFO     | core.nlu.nlu_engine:understand:83 - [integration_test_003] 开始NLU理解: 查询我的流量使用情况
+2025-10-05 19:50:22.374 | DEBUG    | core.nlu.nlu_engine:understand:88 - [integration_test_003] 预处理后: 查询我的流量使用情况
+2025-10-05 19:50:25.098 | INFO     | core.nlu.nlu_engine:understand:113 - [integration_test_003] NLU完成: intent=query_packages
+2025-10-05 19:50:25.099 | INFO     | core.dst.dialog_state_tracker:track:40 - [DST] 开始跟踪会话: integration_test_003
+2025-10-05 19:50:25.099 | DEBUG    | core.dst.state_store:_load_from_memory:118 - 从内存加载状态: integration_test_003
+2025-10-05 19:50:25.099 | DEBUG    | core.dst.slot_manager:fill_slots:43 - 意图不变，合并槽位: ['price_max', 'sort_by']
+2025-10-05 19:50:25.099 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: integration_test_003
+2025-10-05 19:50:25.100 | INFO     | core.dst.dialog_state_tracker:track:112 - [DST] 状态跟踪完成: turn=3, 需要澄清=False
+2025-10-05 19:50:25.100 | INFO     | executor.db_executor:execute_function:29 - 执行Function: query_packages, 参数: {'price_max': 100, 'sort_by': 'price_asc'}
+2025-10-05 19:50:25.106 | INFO     | executor.db_executor:execute_function:50 - Function执行成功: query_packages
+2025-10-05 19:50:25.106 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: integration_test_003
+2025-10-05 19:50:25.107 | INFO     | core.chatbot_dst:_log_conversation:234 - [integration_test_003] 对话完成 | 意图: query_packages | 轮次: 4 | 耗时: 2733ms
+2025-10-05 19:51:56.674 | INFO     | database.db_manager:_initialize:38 - 数据库连接初始化成功
+2025-10-05 19:51:56.675 | ERROR    | database.redis_manager:_initialize:45 - Redis连接池初始化失败: 'Settings' object has no attribute 'get'
+2025-10-05 19:51:56.774 | INFO     | core.nlu.nlu_engine:__init__:53 - ✓ NLU引擎初始化成功: DeepSeek (deepseek-chat)
+2025-10-05 19:51:56.774 | ERROR    | core.dst.state_store:__init__:28 - Redis初始化失败: Redis连接池未初始化, 使用内存存储
+2025-10-05 19:51:56.774 | INFO     | core.dst.dialog_state_tracker:__init__:27 - 对话状态跟踪器初始化完成
+2025-10-05 19:51:56.774 | INFO     | executor.db_executor:__init__:16 - 数据库执行器初始化完成
+2025-10-05 19:51:56.774 | INFO     | core.chatbot_dst:__init__:23 - 第二阶段对话系统初始化完成（含DST支持）
+2025-10-05 19:52:03.649 | INFO     | core.chatbot_dst:chat:46 - [integration_test_004] 收到用户输入: 100元以内的套餐
+2025-10-05 19:52:09.023 | INFO     | core.nlu.nlu_engine:understand:83 - [integration_test_004] 开始NLU理解: 100元以内的套餐
+2025-10-05 19:52:09.024 | DEBUG    | core.nlu.nlu_engine:understand:88 - [integration_test_004] 预处理后: 100元以内的套餐
+2025-10-05 19:53:00.064 | INFO     | core.nlu.nlu_engine:understand:113 - [integration_test_004] NLU完成: intent=query_packages
+2025-10-05 19:53:02.576 | INFO     | core.dst.dialog_state_tracker:track:40 - [DST] 开始跟踪会话: integration_test_004
+2025-10-05 19:53:02.577 | DEBUG    | core.dst.state_store:_load_from_memory:121 - 内存中不存在会话: integration_test_004, 返回新状态
+2025-10-05 19:53:02.578 | INFO     | core.dst.dialog_state_tracker:track:59 - 意图改变: None → query_packages
+2025-10-05 19:53:02.579 | DEBUG    | core.dst.slot_manager:fill_slots:61 - 不同领域，仅保留用户信息: []
+2025-10-05 19:53:02.579 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: integration_test_004
+2025-10-05 19:53:02.579 | INFO     | core.dst.dialog_state_tracker:track:112 - [DST] 状态跟踪完成: turn=1, 需要澄清=False
+2025-10-05 19:53:10.765 | INFO     | executor.db_executor:execute_function:29 - 执行Function: query_packages, 参数: {'price_max': 100, 'sort_by': 'price_asc'}
+2025-10-05 19:53:11.954 | INFO     | executor.db_executor:execute_function:50 - Function执行成功: query_packages
+2025-10-05 19:53:13.739 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: integration_test_004
+2025-10-05 19:53:13.740 | INFO     | core.chatbot_dst:_log_conversation:234 - [integration_test_004] 对话完成 | 意图: query_packages | 轮次: 2 | 耗时: 70091ms
+2025-10-05 19:53:22.190 | INFO     | core.chatbot_dst:chat:46 - [integration_test_004] 收到用户输入: 查询我的流量使用情况
+2025-10-05 19:53:24.075 | INFO     | core.nlu.nlu_engine:understand:83 - [integration_test_004] 开始NLU理解: 查询我的流量使用情况
+2025-10-05 19:53:24.076 | DEBUG    | core.nlu.nlu_engine:understand:88 - [integration_test_004] 预处理后: 查询我的流量使用情况
+2025-10-05 19:55:13.351 | INFO     | core.nlu.nlu_engine:understand:113 - [integration_test_004] NLU完成: intent=query_packages
+2025-10-05 19:55:14.629 | INFO     | core.dst.dialog_state_tracker:track:40 - [DST] 开始跟踪会话: integration_test_004
+2025-10-05 19:55:14.630 | DEBUG    | core.dst.state_store:_load_from_memory:118 - 从内存加载状态: integration_test_004
+2025-10-05 19:55:14.631 | DEBUG    | core.dst.slot_manager:fill_slots:43 - 意图不变，合并槽位: ['price_max', 'sort_by']
+2025-10-05 19:55:14.632 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: integration_test_004
+2025-10-05 19:55:14.632 | INFO     | core.dst.dialog_state_tracker:track:112 - [DST] 状态跟踪完成: turn=3, 需要澄清=False
+2025-10-05 19:55:16.867 | INFO     | executor.db_executor:execute_function:29 - 执行Function: query_packages, 参数: {'price_max': 100, 'sort_by': 'price_asc'}
+2025-10-05 19:55:17.720 | INFO     | executor.db_executor:execute_function:50 - Function执行成功: query_packages
+2025-10-05 19:55:18.884 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: integration_test_004
+2025-10-05 19:55:18.886 | INFO     | core.chatbot_dst:_log_conversation:234 - [integration_test_004] 对话完成 | 意图: query_packages | 轮次: 4 | 耗时: 116696ms
+2025-10-05 20:01:10.697 | INFO     | database.db_manager:_initialize:38 - 数据库连接初始化成功
+2025-10-05 20:01:10.698 | ERROR    | database.redis_manager:_initialize:45 - Redis连接池初始化失败: 'Settings' object has no attribute 'get'
+2025-10-05 20:01:10.793 | INFO     | core.nlu.nlu_engine:__init__:53 - ✓ NLU引擎初始化成功: DeepSeek (deepseek-chat)
+2025-10-05 20:01:10.794 | ERROR    | core.dst.state_store:__init__:28 - Redis初始化失败: Redis连接池未初始化, 使用内存存储
+2025-10-05 20:01:10.794 | INFO     | core.dst.dialog_state_tracker:__init__:27 - 对话状态跟踪器初始化完成
+2025-10-05 20:01:10.794 | INFO     | executor.db_executor:__init__:16 - 数据库执行器初始化完成
+2025-10-05 20:01:10.794 | INFO     | core.chatbot_dst:__init__:23 - 第二阶段对话系统初始化完成（含DST支持）
+2025-10-05 20:01:14.768 | INFO     | core.chatbot_dst:chat:46 - [integration_test_004] 收到用户输入: 100元以内的套餐
+2025-10-05 20:01:14.769 | INFO     | core.nlu.nlu_engine:understand:83 - [integration_test_004] 开始NLU理解: 100元以内的套餐
+2025-10-05 20:01:14.769 | DEBUG    | core.nlu.nlu_engine:understand:88 - [integration_test_004] 预处理后: 100元以内的套餐
+2025-10-05 20:01:18.973 | INFO     | core.nlu.nlu_engine:_parse_response:187 - [response ChatCompletion(id='fd39e706-0f20-440f-a0ee-58abdd0950d8', choices=[Choice(finish_reason='tool_calls', index=0, logprobs=None, message=ChatCompletionMessage(content='', refusal=None, role='assistant', annotations=None, audio=None, function_call=None, tool_calls=[ChatCompletionMessageFunctionToolCall(id='call_00_fHGDeU6gVa9M65X3rRY0H6uK', function=Function(arguments='{"price_max": 100, "sort_by": "price_asc"}', name='query_packages'), type='function', index=0)]))], created=1759665678, model='deepseek-chat', object='chat.completion', service_tier=None, system_fingerprint='fp_ffc7281d48_prod0820_fp8_kvcache', usage=CompletionUsage(completion_tokens=23, prompt_tokens=1436, total_tokens=1459, completion_tokens_details=None, prompt_tokens_details=PromptTokensDetails(audio_tokens=None, cached_tokens=1408), prompt_cache_hit_tokens=1408, prompt_cache_miss_tokens=28))] context: {'history': [], 'current_intent': None, 'slot_values': {}, 'user_phone': None, 'created_at': datetime.datetime(2025, 10, 5, 20, 1, 14, 770069)}
+2025-10-05 20:01:18.973 | INFO     | core.nlu.nlu_engine:understand:113 - [integration_test_004] NLU完成: intent=query_packages
+2025-10-05 20:01:18.973 | INFO     | core.dst.dialog_state_tracker:track:40 - [DST] 开始跟踪会话: integration_test_004
+2025-10-05 20:01:18.973 | DEBUG    | core.dst.state_store:_load_from_memory:121 - 内存中不存在会话: integration_test_004, 返回新状态
+2025-10-05 20:01:18.973 | INFO     | core.dst.dialog_state_tracker:track:59 - 意图改变: None → query_packages
+2025-10-05 20:01:18.973 | DEBUG    | core.dst.slot_manager:fill_slots:61 - 不同领域，仅保留用户信息: []
+2025-10-05 20:01:18.973 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: integration_test_004
+2025-10-05 20:01:18.974 | INFO     | core.dst.dialog_state_tracker:track:112 - [DST] 状态跟踪完成: turn=1, 需要澄清=False
+2025-10-05 20:01:18.974 | INFO     | executor.db_executor:execute_function:29 - 执行Function: query_packages, 参数: {'price_max': 100, 'sort_by': 'price_asc'}
+2025-10-05 20:01:19.042 | INFO     | executor.db_executor:execute_function:50 - Function执行成功: query_packages
+2025-10-05 20:01:19.042 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: integration_test_004
+2025-10-05 20:01:19.042 | INFO     | core.chatbot_dst:_log_conversation:234 - [integration_test_004] 对话完成 | 意图: query_packages | 轮次: 2 | 耗时: 4274ms
+2025-10-05 20:01:19.043 | INFO     | core.chatbot_dst:chat:46 - [integration_test_004] 收到用户输入: 查询我的流量使用情况
+2025-10-05 20:01:19.043 | INFO     | core.nlu.nlu_engine:understand:83 - [integration_test_004] 开始NLU理解: 查询我的流量使用情况
+2025-10-05 20:01:19.043 | DEBUG    | core.nlu.nlu_engine:understand:88 - [integration_test_004] 预处理后: 查询我的流量使用情况
+2025-10-05 20:01:21.786 | INFO     | core.nlu.nlu_engine:_parse_response:187 - [response ChatCompletion(id='b66d7b0f-93ef-4b61-9df1-b7597c07b5b6', choices=[Choice(finish_reason='tool_calls', index=0, logprobs=None, message=ChatCompletionMessage(content='', refusal=None, role='assistant', annotations=None, audio=None, function_call=None, tool_calls=[ChatCompletionMessageFunctionToolCall(id='call_00_eRLUt5fLLslRmWfMl7jJCGpA', function=Function(arguments='{"price_max": 100, "sort_by": "price_asc"}', name='query_packages'), type='function', index=0), ChatCompletionMessageFunctionToolCall(id='call_01_SIHTob5rvepKEDZz9Nz15RVZ', function=Function(arguments='{"query_type": "all"}', name='query_usage'), type='function', index=1)]))], created=1759665681, model='deepseek-chat', object='chat.completion', service_tier=None, system_fingerprint='fp_ffc7281d48_prod0820_fp8_kvcache', usage=CompletionUsage(completion_tokens=36, prompt_tokens=1442, total_tokens=1478, completion_tokens_details=None, prompt_tokens_details=PromptTokensDetails(audio_tokens=None, cached_tokens=1408), prompt_cache_hit_tokens=1408, prompt_cache_miss_tokens=34))] context: {'history': [{'role': 'user', 'content': '100元以内的套餐'}], 'current_intent': 'query_packages', 'slot_values': {'price_max': 100, 'sort_by': 'price_asc'}, 'user_phone': None, 'created_at': datetime.datetime(2025, 10, 5, 20, 1, 14, 770069)}
+2025-10-05 20:01:21.787 | INFO     | core.nlu.nlu_engine:understand:113 - [integration_test_004] NLU完成: intent=query_packages
+2025-10-05 20:01:21.787 | INFO     | core.dst.dialog_state_tracker:track:40 - [DST] 开始跟踪会话: integration_test_004
+2025-10-05 20:01:21.787 | DEBUG    | core.dst.state_store:_load_from_memory:118 - 从内存加载状态: integration_test_004
+2025-10-05 20:01:21.787 | DEBUG    | core.dst.slot_manager:fill_slots:43 - 意图不变，合并槽位: ['price_max', 'sort_by']
+2025-10-05 20:01:21.787 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: integration_test_004
+2025-10-05 20:01:21.787 | INFO     | core.dst.dialog_state_tracker:track:112 - [DST] 状态跟踪完成: turn=3, 需要澄清=False
+2025-10-05 20:01:21.788 | INFO     | executor.db_executor:execute_function:29 - 执行Function: query_packages, 参数: {'price_max': 100, 'sort_by': 'price_asc'}
+2025-10-05 20:01:21.794 | INFO     | executor.db_executor:execute_function:50 - Function执行成功: query_packages
+2025-10-05 20:01:21.794 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: integration_test_004
+2025-10-05 20:01:21.794 | INFO     | core.chatbot_dst:_log_conversation:234 - [integration_test_004] 对话完成 | 意图: query_packages | 轮次: 4 | 耗时: 2752ms
