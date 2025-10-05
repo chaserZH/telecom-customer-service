@@ -2,14 +2,17 @@
 """
 DST模块单元测试
 """
+import os
+import sys
+
+# 添加项目根目录到 Python 路径
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import pytest
 from datetime import datetime
 
-from core.dst.dialog_state import DialogState, DialogTurn
-from core.dst.dialog_state_tracker import DialogStateTracker
-from core.dst.slot_manager import SlotManager
-from core.dst.context_manager import ContextManager
-from core.nlu.nlu_engine import NLUResult
+from core.dst import DialogState, DialogStateTracker, SlotManager, ContextManager
+from core import NLUResult
 
 
 class TestDialogState:

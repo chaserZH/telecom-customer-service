@@ -6,8 +6,8 @@ from typing import Dict, Any, Optional
 import uuid
 from datetime import datetime
 
-from core.nlu.nlu_engine import NLUEngine
-from core.dst.dialog_state_tracker import DialogStateTracker
+from core import NLUEngine
+from core.dst import DialogStateTracker
 from executor.db_executor import DatabaseExecutor
 from utils.logger import logger
 

@@ -1,11 +1,18 @@
-# dst 模块
-
+# core/dst/__init__.py
 """
 DST (Dialog State Tracking) 模块
 对话状态跟踪
 """
 
-from core.dst.dialog_state import DialogState, DialogTurn
-from core.dst.dialog_state_tracker import DialogStateTracker
+from .dialog_state import DialogState, DialogTurn
+from .dialog_state_tracker import DialogStateTracker
+from .slot_manager import SlotManager
+from .context_manager import ContextManager
 
-__all__ = ['DialogState', 'DialogTurn', 'DialogStateTracker']
+__all__ = [
+    'DialogState',
+    'DialogTurn',
+    'DialogStateTracker',
+    'SlotManager',
+    'ContextManager'
+]

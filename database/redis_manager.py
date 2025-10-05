@@ -4,7 +4,7 @@ Redis连接管理器
 import redis
 from redis.connection import ConnectionPool
 from typing import Optional
-from config.settings import settings
+from config import settings
 from utils.logger import logger
 
 

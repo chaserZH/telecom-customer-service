@@ -35,6 +35,10 @@ FUNCTION_DEFINITIONS =[
                         "type":"number",
                         "description": "最多流量(GB/月)"
                     },
+                    "data_min": {
+                        "type": "number",
+                        "description": "最少流量(GB/月)"
+                    },
                     "target_user": {
                         "type": "string",
                         "enum": ["无限制", "在校生"],

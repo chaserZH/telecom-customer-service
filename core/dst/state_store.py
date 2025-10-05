@@ -7,7 +7,7 @@ from datetime import datetime
 
 from core.dst.dialog_state import DialogState
 
-from config.settings import settings
+from config import settings
 from database import redis_manager
 from utils.logger import logger
 

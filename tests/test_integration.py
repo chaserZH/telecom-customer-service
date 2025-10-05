@@ -7,7 +7,7 @@ from core import TelecomChatbotNlu, TelecomChatbotDst
 from utils import logger
 
 
-class TestIntegration:
+class TestNLUIntegration:
     """集成测试"""
 
     @pytest.fixture
@@ -71,6 +71,7 @@ class TestDSTIntegration:
             "有100元以内的套餐吗",
             session_id=session_id
         )
+        logger.info(f"第一轮返回结果: {response1}")
         assert response1["intent"] == "query_packages"
         assert not response1["requires_input"]
 
@@ -82,13 +83,14 @@ class TestDSTIntegration:
 
         # 验证槽位继承
         state = response2.get("state", {})
+        logger.info(f"第二轮返回结果: {state}")
         slots = state.get("slots", {})
         assert slots.get("price_max") == 100  # 继承
         assert slots.get("data_min") == 50  # 新增
 
     def test_slot_inheritance_across_intents(self, chatbot):
         """测试跨意图的槽位继承"""
-        session_id = "integration_test_002"
+        session_id = "integration_test_0002"
 
         # 第一轮: 查询当前套餐（需要手机号）
         response1 = chatbot.chat(
