@@ -97,7 +97,7 @@ class NLUEngine:
                 model=self.model,
                 messages=messages,
                 tools=FUNCTION_DEFINITIONS,
-                tool_choice="auto",
+                tool_choice="required",  # ⭐ 强制调用工具
                 temperature=0.3
             )
 
@@ -138,34 +138,11 @@ class NLUEngine:
             }
         return self.sessions[session_id]
 
-    # 在NLU引擎中添加示例（修改 core/nlu/nlu_engine.py）：
     def _build_messages(self, user_input: str, context: Dict) -> List[Dict]:
         """构建消息列表"""
         messages = [
             {"role": "system", "content": SYSTEM_PROMPT},
-            # ⭐ 添加few-shot示例
-            {"role": "user", "content": "查下我的套餐"},
-            {"role": "assistant", "content": "", "tool_calls": [
-                {
-                    "id": "call_example",
-                    "type": "function",
-                    "function": {
-                        "name": "query_current_package",
-                        "arguments": "{}"
-                    }
-                }
-            ]},
-            {"role": "user", "content": "有什么套餐"},
-            {"role": "assistant", "content": "", "tool_calls": [
-                {
-                    "id": "call_example2",
-                    "type": "function",
-                    "function": {
-                        "name": "query_packages",
-                        "arguments": "{}"
-                    }
-                }
-            ]},
+            # 删除 few-shot 示例，依靠 system prompt 中的说明
         ]
 
         # 添加历史消息

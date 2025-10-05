@@ -132,14 +132,18 @@ class TestDSTIntegration:
 
         # 第二轮: 切换到完全不同的意图
         response2 = chatbot.chat(
-            "我要办理套餐",
+            "我用了多少流量",  # ⭐ 改为 query_usage，完全不同的领域
             session_id=session_id
         )
         state2 = response2.get("state", {})
-        slots2 = state2.get("slots", {})
 
-        # price_max应该被清除
-        assert "price_max" not in slots2
+        # ⭐ 先检查意图是否切换
+        assert state2.get("current_intent") == "query_usage", "意图应该切换为 query_usage"
+
+        # 然后检查槽位清理
+        # query_usage 和 query_packages 是不同领域，price_max应该被清除
+        slots2 = state2.get("slots", {})
+        assert "price_max" not in slots2, f"price_max应该被清除，实际slots: {slots2}"
 
     def test_state_persistence(self, chatbot):
         """测试状态持久化"""

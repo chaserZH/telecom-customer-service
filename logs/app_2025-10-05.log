@@ -423,3 +423,197 @@
 2025-10-05 17:55:21.640 | INFO     | executor.db_executor:execute_function:29 - 执行Function: error, 参数: {}
 2025-10-05 17:55:23.857 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: integration_test_0002
 2025-10-05 17:55:23.858 | INFO     | core.chatbot_dst:_log_conversation:234 - [integration_test_0002] 对话完成 | 意图: error | 轮次: 2 | 耗时: 17723ms
+2025-10-05 18:12:24.187 | INFO     | database.db_manager:_initialize:38 - 数据库连接初始化成功
+2025-10-05 18:12:24.188 | ERROR    | database.redis_manager:_initialize:45 - Redis连接池初始化失败: 'Settings' object has no attribute 'get'
+2025-10-05 18:12:25.209 | INFO     | core.nlu.nlu_engine:__init__:50 - ✓ NLU引擎初始化成功: DeepSeek (deepseek-chat)
+2025-10-05 18:12:25.210 | ERROR    | core.dst.state_store:__init__:28 - Redis初始化失败: Redis连接池未初始化, 使用内存存储
+2025-10-05 18:12:25.210 | INFO     | core.dst.dialog_state_tracker:__init__:27 - 对话状态跟踪器初始化完成
+2025-10-05 18:12:25.210 | INFO     | executor.db_executor:__init__:16 - 数据库执行器初始化完成
+2025-10-05 18:12:25.210 | INFO     | core.chatbot_dst:__init__:23 - 第二阶段对话系统初始化完成（含DST支持）
+2025-10-05 18:12:27.803 | INFO     | core.chatbot_dst:chat:46 - [integration_test_0002] 收到用户输入: 查下我的套餐
+2025-10-05 18:12:29.706 | INFO     | core.nlu.nlu_engine:understand:80 - [integration_test_0002] 开始NLU理解: 查下我的套餐
+2025-10-05 18:12:29.708 | DEBUG    | core.nlu.nlu_engine:understand:85 - [integration_test_0002] 预处理后: 查下我的套餐
+2025-10-05 18:12:53.967 | INFO     | core.nlu.nlu_engine:understand:110 - [integration_test_0002] NLU完成: intent=chat
+2025-10-05 18:12:56.061 | INFO     | core.dst.dialog_state_tracker:track:40 - [DST] 开始跟踪会话: integration_test_0002
+2025-10-05 18:12:56.062 | DEBUG    | core.dst.state_store:_load_from_memory:121 - 内存中不存在会话: integration_test_0002, 返回新状态
+2025-10-05 18:12:56.062 | INFO     | core.dst.dialog_state_tracker:track:59 - 意图改变: None → chat
+2025-10-05 18:12:56.062 | DEBUG    | core.dst.slot_manager:fill_slots:61 - 不同领域，仅保留用户信息: []
+2025-10-05 18:13:00.156 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: integration_test_0002
+2025-10-05 18:13:00.158 | INFO     | core.dst.dialog_state_tracker:track:112 - [DST] 状态跟踪完成: turn=1, 需要澄清=False
+2025-10-05 18:13:04.777 | INFO     | executor.db_executor:execute_function:29 - 执行Function: chat, 参数: {}
+2025-10-05 18:13:04.778 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: integration_test_0002
+2025-10-05 18:13:04.778 | INFO     | core.chatbot_dst:_log_conversation:234 - [integration_test_0002] 对话完成 | 意图: chat | 轮次: 2 | 耗时: 36975ms
+2025-10-05 18:18:52.388 | INFO     | database.db_manager:_initialize:38 - 数据库连接初始化成功
+2025-10-05 18:18:52.389 | ERROR    | database.redis_manager:_initialize:45 - Redis连接池初始化失败: 'Settings' object has no attribute 'get'
+2025-10-05 18:18:53.365 | INFO     | core.nlu.nlu_engine:__init__:50 - ✓ NLU引擎初始化成功: DeepSeek (deepseek-chat)
+2025-10-05 18:18:53.366 | ERROR    | core.dst.state_store:__init__:28 - Redis初始化失败: Redis连接池未初始化, 使用内存存储
+2025-10-05 18:18:53.366 | INFO     | core.dst.dialog_state_tracker:__init__:27 - 对话状态跟踪器初始化完成
+2025-10-05 18:18:53.366 | INFO     | executor.db_executor:__init__:16 - 数据库执行器初始化完成
+2025-10-05 18:18:53.366 | INFO     | core.chatbot_dst:__init__:23 - 第二阶段对话系统初始化完成（含DST支持）
+2025-10-05 18:18:53.367 | INFO     | core.chatbot_dst:chat:46 - [integration_test_0002] 收到用户输入: 查下我的套餐
+2025-10-05 18:18:53.367 | INFO     | core.nlu.nlu_engine:understand:80 - [integration_test_0002] 开始NLU理解: 查下我的套餐
+2025-10-05 18:18:53.367 | DEBUG    | core.nlu.nlu_engine:understand:85 - [integration_test_0002] 预处理后: 查下我的套餐
+2025-10-05 18:18:57.071 | INFO     | core.nlu.nlu_engine:understand:110 - [integration_test_0002] NLU完成: intent=chat
+2025-10-05 18:18:57.071 | INFO     | core.dst.dialog_state_tracker:track:40 - [DST] 开始跟踪会话: integration_test_0002
+2025-10-05 18:18:57.071 | DEBUG    | core.dst.state_store:_load_from_memory:121 - 内存中不存在会话: integration_test_0002, 返回新状态
+2025-10-05 18:18:57.071 | INFO     | core.dst.dialog_state_tracker:track:59 - 意图改变: None → chat
+2025-10-05 18:18:57.071 | DEBUG    | core.dst.slot_manager:fill_slots:61 - 不同领域，仅保留用户信息: []
+2025-10-05 18:18:57.071 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: integration_test_0002
+2025-10-05 18:18:57.071 | INFO     | core.dst.dialog_state_tracker:track:112 - [DST] 状态跟踪完成: turn=1, 需要澄清=False
+2025-10-05 18:18:57.072 | INFO     | executor.db_executor:execute_function:29 - 执行Function: chat, 参数: {}
+2025-10-05 18:18:57.072 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: integration_test_0002
+2025-10-05 18:18:57.072 | INFO     | core.chatbot_dst:_log_conversation:234 - [integration_test_0002] 对话完成 | 意图: chat | 轮次: 2 | 耗时: 3705ms
+2025-10-05 18:20:06.540 | INFO     | database.db_manager:_initialize:38 - 数据库连接初始化成功
+2025-10-05 18:20:06.540 | ERROR    | database.redis_manager:_initialize:45 - Redis连接池初始化失败: 'Settings' object has no attribute 'get'
+2025-10-05 18:20:07.517 | INFO     | core.nlu.nlu_engine:__init__:50 - ✓ NLU引擎初始化成功: DeepSeek (deepseek-chat)
+2025-10-05 18:20:07.518 | ERROR    | core.dst.state_store:__init__:28 - Redis初始化失败: Redis连接池未初始化, 使用内存存储
+2025-10-05 18:20:07.518 | INFO     | core.dst.dialog_state_tracker:__init__:27 - 对话状态跟踪器初始化完成
+2025-10-05 18:20:07.518 | INFO     | executor.db_executor:__init__:16 - 数据库执行器初始化完成
+2025-10-05 18:20:07.518 | INFO     | core.chatbot_dst:__init__:23 - 第二阶段对话系统初始化完成（含DST支持）
+2025-10-05 18:20:07.519 | INFO     | core.chatbot_dst:chat:46 - [integration_test_0002] 收到用户输入: 查下我的套餐
+2025-10-05 18:20:07.519 | INFO     | core.nlu.nlu_engine:understand:80 - [integration_test_0002] 开始NLU理解: 查下我的套餐
+2025-10-05 18:20:07.519 | DEBUG    | core.nlu.nlu_engine:understand:85 - [integration_test_0002] 预处理后: 查下我的套餐
+2025-10-05 18:20:10.649 | INFO     | core.nlu.nlu_engine:understand:110 - [integration_test_0002] NLU完成: intent=query_current_package
+2025-10-05 18:20:10.649 | INFO     | core.dst.dialog_state_tracker:track:40 - [DST] 开始跟踪会话: integration_test_0002
+2025-10-05 18:20:10.649 | DEBUG    | core.dst.state_store:_load_from_memory:121 - 内存中不存在会话: integration_test_0002, 返回新状态
+2025-10-05 18:20:10.650 | INFO     | core.dst.dialog_state_tracker:track:59 - 意图改变: None → query_current_package
+2025-10-05 18:20:10.650 | DEBUG    | core.dst.slot_manager:fill_slots:61 - 不同领域，仅保留用户信息: []
+2025-10-05 18:20:10.650 | INFO     | core.dst.slot_manager:validate_slots:103 - 缺失槽位: ['phone']
+2025-10-05 18:20:10.650 | INFO     | core.dst.dialog_state_tracker:_validate_slots:134 - 缺失必填槽位: ['phone']
+2025-10-05 18:20:10.650 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: integration_test_0002
+2025-10-05 18:20:10.650 | INFO     | core.dst.dialog_state_tracker:track:112 - [DST] 状态跟踪完成: turn=1, 需要澄清=True
+2025-10-05 18:20:10.650 | INFO     | core.chatbot_dst:_log_conversation:234 - [integration_test_0002] 对话完成 | 意图: query_current_package | 轮次: 1 | 耗时: 3131ms
+2025-10-05 18:20:10.650 | INFO     | core.chatbot_dst:chat:46 - [integration_test_0002] 收到用户输入: 13800138000
+2025-10-05 18:20:10.650 | INFO     | core.nlu.nlu_engine:understand:80 - [integration_test_0002] 开始NLU理解: 13800138000
+2025-10-05 18:20:10.650 | DEBUG    | core.nlu.nlu_engine:understand:85 - [integration_test_0002] 预处理后: 13800138000
+2025-10-05 18:20:13.251 | INFO     | core.nlu.nlu_engine:understand:110 - [integration_test_0002] NLU完成: intent=query_current_package
+2025-10-05 18:20:13.252 | INFO     | core.dst.dialog_state_tracker:track:40 - [DST] 开始跟踪会话: integration_test_0002
+2025-10-05 18:20:13.252 | DEBUG    | core.dst.state_store:_load_from_memory:118 - 从内存加载状态: integration_test_0002
+2025-10-05 18:20:13.252 | DEBUG    | core.dst.slot_manager:fill_slots:43 - 意图不变，合并槽位: ['phone']
+2025-10-05 18:20:13.253 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: integration_test_0002
+2025-10-05 18:20:13.253 | INFO     | core.dst.dialog_state_tracker:track:112 - [DST] 状态跟踪完成: turn=2, 需要澄清=False
+2025-10-05 18:20:13.253 | INFO     | executor.db_executor:execute_function:29 - 执行Function: query_current_package, 参数: {'phone': '13800138000'}
+2025-10-05 18:20:13.374 | INFO     | executor.db_executor:execute_function:50 - Function执行成功: query_current_package
+2025-10-05 18:20:13.375 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: integration_test_0002
+2025-10-05 18:20:13.375 | INFO     | core.chatbot_dst:_log_conversation:234 - [integration_test_0002] 对话完成 | 意图: query_current_package | 轮次: 3 | 耗时: 2725ms
+2025-10-05 18:20:13.375 | INFO     | core.chatbot_dst:chat:46 - [integration_test_0002] 收到用户输入: 我用了多少流量
+2025-10-05 18:20:13.376 | INFO     | core.nlu.nlu_engine:understand:80 - [integration_test_0002] 开始NLU理解: 我用了多少流量
+2025-10-05 18:20:13.376 | DEBUG    | core.nlu.nlu_engine:understand:85 - [integration_test_0002] 预处理后: 我用了多少流量
+2025-10-05 18:20:16.407 | INFO     | core.nlu.nlu_engine:understand:110 - [integration_test_0002] NLU完成: intent=query_current_package
+2025-10-05 18:20:16.408 | INFO     | core.dst.dialog_state_tracker:track:40 - [DST] 开始跟踪会话: integration_test_0002
+2025-10-05 18:20:16.408 | DEBUG    | core.dst.state_store:_load_from_memory:118 - 从内存加载状态: integration_test_0002
+2025-10-05 18:20:16.408 | DEBUG    | core.dst.slot_manager:fill_slots:43 - 意图不变，合并槽位: ['phone']
+2025-10-05 18:20:16.408 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: integration_test_0002
+2025-10-05 18:20:16.408 | INFO     | core.dst.dialog_state_tracker:track:112 - [DST] 状态跟踪完成: turn=4, 需要澄清=False
+2025-10-05 18:20:16.409 | INFO     | executor.db_executor:execute_function:29 - 执行Function: query_current_package, 参数: {'phone': '13800138000'}
+2025-10-05 18:20:16.416 | INFO     | executor.db_executor:execute_function:50 - Function执行成功: query_current_package
+2025-10-05 18:20:16.417 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: integration_test_0002
+2025-10-05 18:20:16.417 | INFO     | core.chatbot_dst:_log_conversation:234 - [integration_test_0002] 对话完成 | 意图: query_current_package | 轮次: 5 | 耗时: 3042ms
+2025-10-05 18:23:49.843 | INFO     | database.db_manager:_initialize:38 - 数据库连接初始化成功
+2025-10-05 18:23:49.843 | ERROR    | database.redis_manager:_initialize:45 - Redis连接池初始化失败: 'Settings' object has no attribute 'get'
+2025-10-05 18:23:50.080 | INFO     | core.nlu.nlu_engine:__init__:50 - ✓ NLU引擎初始化成功: DeepSeek (deepseek-chat)
+2025-10-05 18:23:50.080 | ERROR    | core.dst.state_store:__init__:28 - Redis初始化失败: Redis连接池未初始化, 使用内存存储
+2025-10-05 18:23:50.080 | INFO     | core.dst.dialog_state_tracker:__init__:27 - 对话状态跟踪器初始化完成
+2025-10-05 18:23:50.080 | INFO     | executor.db_executor:__init__:16 - 数据库执行器初始化完成
+2025-10-05 18:23:50.080 | INFO     | core.chatbot_dst:__init__:23 - 第二阶段对话系统初始化完成（含DST支持）
+2025-10-05 18:23:50.081 | INFO     | core.chatbot_dst:chat:46 - [integration_test_0002] 收到用户输入: 查下我的套餐
+2025-10-05 18:23:50.081 | INFO     | core.nlu.nlu_engine:understand:80 - [integration_test_0002] 开始NLU理解: 查下我的套餐
+2025-10-05 18:23:50.081 | DEBUG    | core.nlu.nlu_engine:understand:85 - [integration_test_0002] 预处理后: 查下我的套餐
+2025-10-05 18:23:52.808 | INFO     | core.nlu.nlu_engine:understand:110 - [integration_test_0002] NLU完成: intent=chat
+2025-10-05 18:23:52.809 | INFO     | core.dst.dialog_state_tracker:track:40 - [DST] 开始跟踪会话: integration_test_0002
+2025-10-05 18:23:52.809 | DEBUG    | core.dst.state_store:_load_from_memory:121 - 内存中不存在会话: integration_test_0002, 返回新状态
+2025-10-05 18:23:52.809 | INFO     | core.dst.dialog_state_tracker:track:59 - 意图改变: None → chat
+2025-10-05 18:23:52.809 | DEBUG    | core.dst.slot_manager:fill_slots:61 - 不同领域，仅保留用户信息: []
+2025-10-05 18:23:52.809 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: integration_test_0002
+2025-10-05 18:23:52.809 | INFO     | core.dst.dialog_state_tracker:track:112 - [DST] 状态跟踪完成: turn=1, 需要澄清=False
+2025-10-05 18:23:52.809 | INFO     | executor.db_executor:execute_function:29 - 执行Function: chat, 参数: {}
+2025-10-05 18:23:52.809 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: integration_test_0002
+2025-10-05 18:23:52.810 | INFO     | core.chatbot_dst:_log_conversation:234 - [integration_test_0002] 对话完成 | 意图: chat | 轮次: 2 | 耗时: 2729ms
+2025-10-05 18:25:13.784 | INFO     | database.db_manager:_initialize:38 - 数据库连接初始化成功
+2025-10-05 18:25:13.785 | ERROR    | database.redis_manager:_initialize:45 - Redis连接池初始化失败: 'Settings' object has no attribute 'get'
+2025-10-05 18:25:14.763 | INFO     | core.nlu.nlu_engine:__init__:50 - ✓ NLU引擎初始化成功: DeepSeek (deepseek-chat)
+2025-10-05 18:25:14.763 | ERROR    | core.dst.state_store:__init__:28 - Redis初始化失败: Redis连接池未初始化, 使用内存存储
+2025-10-05 18:25:14.764 | INFO     | core.dst.dialog_state_tracker:__init__:27 - 对话状态跟踪器初始化完成
+2025-10-05 18:25:14.764 | INFO     | executor.db_executor:__init__:16 - 数据库执行器初始化完成
+2025-10-05 18:25:14.764 | INFO     | core.chatbot_dst:__init__:23 - 第二阶段对话系统初始化完成（含DST支持）
+2025-10-05 18:25:14.765 | INFO     | core.chatbot_dst:chat:46 - [integration_test_0002] 收到用户输入: 查下我的套餐
+2025-10-05 18:25:14.765 | INFO     | core.nlu.nlu_engine:understand:80 - [integration_test_0002] 开始NLU理解: 查下我的套餐
+2025-10-05 18:25:14.765 | DEBUG    | core.nlu.nlu_engine:understand:85 - [integration_test_0002] 预处理后: 查下我的套餐
+2025-10-05 18:25:18.561 | INFO     | core.nlu.nlu_engine:understand:110 - [integration_test_0002] NLU完成: intent=chat
+2025-10-05 18:25:18.561 | INFO     | core.dst.dialog_state_tracker:track:40 - [DST] 开始跟踪会话: integration_test_0002
+2025-10-05 18:25:18.561 | DEBUG    | core.dst.state_store:_load_from_memory:121 - 内存中不存在会话: integration_test_0002, 返回新状态
+2025-10-05 18:25:18.561 | INFO     | core.dst.dialog_state_tracker:track:59 - 意图改变: None → chat
+2025-10-05 18:25:18.561 | DEBUG    | core.dst.slot_manager:fill_slots:61 - 不同领域，仅保留用户信息: []
+2025-10-05 18:25:18.561 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: integration_test_0002
+2025-10-05 18:25:18.561 | INFO     | core.dst.dialog_state_tracker:track:112 - [DST] 状态跟踪完成: turn=1, 需要澄清=False
+2025-10-05 18:25:18.562 | INFO     | executor.db_executor:execute_function:29 - 执行Function: chat, 参数: {}
+2025-10-05 18:25:18.562 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: integration_test_0002
+2025-10-05 18:25:18.562 | INFO     | core.chatbot_dst:_log_conversation:234 - [integration_test_0002] 对话完成 | 意图: chat | 轮次: 2 | 耗时: 3797ms
+2025-10-05 18:26:51.428 | INFO     | database.db_manager:_initialize:38 - 数据库连接初始化成功
+2025-10-05 18:26:51.428 | ERROR    | database.redis_manager:_initialize:45 - Redis连接池初始化失败: 'Settings' object has no attribute 'get'
+2025-10-05 18:26:52.442 | INFO     | core.nlu.nlu_engine:__init__:50 - ✓ NLU引擎初始化成功: DeepSeek (deepseek-chat)
+2025-10-05 18:26:52.442 | ERROR    | core.dst.state_store:__init__:28 - Redis初始化失败: Redis连接池未初始化, 使用内存存储
+2025-10-05 18:26:52.442 | INFO     | core.dst.dialog_state_tracker:__init__:27 - 对话状态跟踪器初始化完成
+2025-10-05 18:26:52.442 | INFO     | executor.db_executor:__init__:16 - 数据库执行器初始化完成
+2025-10-05 18:26:52.442 | INFO     | core.chatbot_dst:__init__:23 - 第二阶段对话系统初始化完成（含DST支持）
+2025-10-05 18:26:52.443 | INFO     | core.chatbot_dst:chat:46 - [integration_test_003] 收到用户输入: 100元以内的套餐
+2025-10-05 18:26:52.443 | INFO     | core.nlu.nlu_engine:understand:80 - [integration_test_003] 开始NLU理解: 100元以内的套餐
+2025-10-05 18:26:52.444 | DEBUG    | core.nlu.nlu_engine:understand:85 - [integration_test_003] 预处理后: 100元以内的套餐
+2025-10-05 18:27:09.321 | INFO     | core.nlu.nlu_engine:understand:110 - [integration_test_003] NLU完成: intent=query_packages
+2025-10-05 18:27:18.171 | INFO     | core.dst.dialog_state_tracker:track:40 - [DST] 开始跟踪会话: integration_test_003
+2025-10-05 18:27:18.171 | DEBUG    | core.dst.state_store:_load_from_memory:121 - 内存中不存在会话: integration_test_003, 返回新状态
+2025-10-05 18:27:18.172 | INFO     | core.dst.dialog_state_tracker:track:59 - 意图改变: None → query_packages
+2025-10-05 18:27:18.172 | DEBUG    | core.dst.slot_manager:fill_slots:61 - 不同领域，仅保留用户信息: []
+2025-10-05 18:27:32.873 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: integration_test_003
+2025-10-05 18:27:32.874 | INFO     | core.dst.dialog_state_tracker:track:112 - [DST] 状态跟踪完成: turn=1, 需要澄清=False
+2025-10-05 18:27:46.891 | INFO     | executor.db_executor:execute_function:29 - 执行Function: query_packages, 参数: {'price_max': 100, 'sort_by': 'price_asc'}
+2025-10-05 18:28:02.085 | INFO     | executor.db_executor:execute_function:50 - Function执行成功: query_packages
+2025-10-05 18:28:09.861 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: integration_test_003
+2025-10-05 18:28:09.862 | INFO     | core.chatbot_dst:_log_conversation:234 - [integration_test_003] 对话完成 | 意图: query_packages | 轮次: 2 | 耗时: 77419ms
+2025-10-05 18:28:29.942 | INFO     | core.chatbot_dst:chat:46 - [integration_test_003] 收到用户输入: 我要办理套餐
+2025-10-05 18:28:29.945 | INFO     | core.nlu.nlu_engine:understand:80 - [integration_test_003] 开始NLU理解: 我要办理套餐
+2025-10-05 18:28:29.946 | DEBUG    | core.nlu.nlu_engine:understand:85 - [integration_test_003] 预处理后: 我要办理套餐
+2025-10-05 18:28:32.654 | INFO     | core.nlu.nlu_engine:understand:110 - [integration_test_003] NLU完成: intent=query_packages
+2025-10-05 18:28:32.655 | INFO     | core.dst.dialog_state_tracker:track:40 - [DST] 开始跟踪会话: integration_test_003
+2025-10-05 18:28:32.656 | DEBUG    | core.dst.state_store:_load_from_memory:118 - 从内存加载状态: integration_test_003
+2025-10-05 18:28:32.657 | DEBUG    | core.dst.slot_manager:fill_slots:43 - 意图不变，合并槽位: ['price_max']
+2025-10-05 18:28:32.657 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: integration_test_003
+2025-10-05 18:28:32.657 | INFO     | core.dst.dialog_state_tracker:track:112 - [DST] 状态跟踪完成: turn=3, 需要澄清=False
+2025-10-05 18:28:32.658 | INFO     | executor.db_executor:execute_function:29 - 执行Function: query_packages, 参数: {'price_max': 100, 'sort_by': 'price_asc'}
+2025-10-05 18:28:32.674 | INFO     | executor.db_executor:execute_function:50 - Function执行成功: query_packages
+2025-10-05 18:28:32.675 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: integration_test_003
+2025-10-05 18:28:32.676 | INFO     | core.chatbot_dst:_log_conversation:234 - [integration_test_003] 对话完成 | 意图: query_packages | 轮次: 4 | 耗时: 2733ms
+2025-10-05 18:36:18.949 | INFO     | database.db_manager:_initialize:38 - 数据库连接初始化成功
+2025-10-05 18:36:18.950 | ERROR    | database.redis_manager:_initialize:45 - Redis连接池初始化失败: 'Settings' object has no attribute 'get'
+2025-10-05 18:36:19.187 | INFO     | core.nlu.nlu_engine:__init__:50 - ✓ NLU引擎初始化成功: DeepSeek (deepseek-chat)
+2025-10-05 18:36:19.187 | ERROR    | core.dst.state_store:__init__:28 - Redis初始化失败: Redis连接池未初始化, 使用内存存储
+2025-10-05 18:36:19.187 | INFO     | core.dst.dialog_state_tracker:__init__:27 - 对话状态跟踪器初始化完成
+2025-10-05 18:36:19.187 | INFO     | executor.db_executor:__init__:16 - 数据库执行器初始化完成
+2025-10-05 18:36:19.187 | INFO     | core.chatbot_dst:__init__:23 - 第二阶段对话系统初始化完成（含DST支持）
+2025-10-05 18:36:19.188 | INFO     | core.chatbot_dst:chat:46 - [integration_test_003] 收到用户输入: 100元以内的套餐
+2025-10-05 18:36:19.188 | INFO     | core.nlu.nlu_engine:understand:80 - [integration_test_003] 开始NLU理解: 100元以内的套餐
+2025-10-05 18:36:19.188 | DEBUG    | core.nlu.nlu_engine:understand:85 - [integration_test_003] 预处理后: 100元以内的套餐
+2025-10-05 18:36:22.474 | INFO     | core.nlu.nlu_engine:understand:110 - [integration_test_003] NLU完成: intent=query_packages
+2025-10-05 18:36:22.474 | INFO     | core.dst.dialog_state_tracker:track:40 - [DST] 开始跟踪会话: integration_test_003
+2025-10-05 18:36:22.474 | DEBUG    | core.dst.state_store:_load_from_memory:121 - 内存中不存在会话: integration_test_003, 返回新状态
+2025-10-05 18:36:22.474 | INFO     | core.dst.dialog_state_tracker:track:59 - 意图改变: None → query_packages
+2025-10-05 18:36:22.474 | DEBUG    | core.dst.slot_manager:fill_slots:61 - 不同领域，仅保留用户信息: []
+2025-10-05 18:36:22.474 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: integration_test_003
+2025-10-05 18:36:22.474 | INFO     | core.dst.dialog_state_tracker:track:112 - [DST] 状态跟踪完成: turn=1, 需要澄清=False
+2025-10-05 18:36:22.474 | INFO     | executor.db_executor:execute_function:29 - 执行Function: query_packages, 参数: {'price_max': 100}
+2025-10-05 18:36:22.548 | INFO     | executor.db_executor:execute_function:50 - Function执行成功: query_packages
+2025-10-05 18:36:22.548 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: integration_test_003
+2025-10-05 18:36:22.549 | INFO     | core.chatbot_dst:_log_conversation:234 - [integration_test_003] 对话完成 | 意图: query_packages | 轮次: 2 | 耗时: 3361ms
+2025-10-05 18:36:22.549 | INFO     | core.chatbot_dst:chat:46 - [integration_test_003] 收到用户输入: 我用了多少流量
+2025-10-05 18:36:22.549 | INFO     | core.nlu.nlu_engine:understand:80 - [integration_test_003] 开始NLU理解: 我用了多少流量
+2025-10-05 18:36:22.549 | DEBUG    | core.nlu.nlu_engine:understand:85 - [integration_test_003] 预处理后: 我用了多少流量
+2025-10-05 18:36:25.529 | INFO     | core.nlu.nlu_engine:understand:110 - [integration_test_003] NLU完成: intent=query_packages
+2025-10-05 18:36:25.530 | INFO     | core.dst.dialog_state_tracker:track:40 - [DST] 开始跟踪会话: integration_test_003
+2025-10-05 18:36:25.530 | DEBUG    | core.dst.state_store:_load_from_memory:118 - 从内存加载状态: integration_test_003
+2025-10-05 18:36:25.530 | DEBUG    | core.dst.slot_manager:fill_slots:43 - 意图不变，合并槽位: ['price_max']
+2025-10-05 18:36:25.530 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: integration_test_003
+2025-10-05 18:36:25.530 | INFO     | core.dst.dialog_state_tracker:track:112 - [DST] 状态跟踪完成: turn=3, 需要澄清=False
+2025-10-05 18:36:25.530 | INFO     | executor.db_executor:execute_function:29 - 执行Function: query_packages, 参数: {'price_max': 100}
+2025-10-05 18:36:25.537 | INFO     | executor.db_executor:execute_function:50 - Function执行成功: query_packages
+2025-10-05 18:36:25.538 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: integration_test_003
+2025-10-05 18:36:25.538 | INFO     | core.chatbot_dst:_log_conversation:234 - [integration_test_003] 对话完成 | 意图: query_packages | 轮次: 4 | 耗时: 2989ms
