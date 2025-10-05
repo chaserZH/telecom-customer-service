@@ -7,6 +7,9 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional, Dict, Any, List
 
+from openai.types.chat import ChatCompletionSystemMessageParam, ChatCompletionUserMessageParam, \
+    ChatCompletionAssistantMessageParam
+
 from config import settings, SYSTEM_PROMPT, SLOT_QUESTIONS
 # 改为从当前包直接导入，而不是从core包导入
 from .function_definitions import FUNCTION_DEFINITIONS, get_required_params
@@ -97,7 +100,7 @@ class NLUEngine:
                 model=self.model,
                 messages=messages,
                 tools=FUNCTION_DEFINITIONS,
-                tool_choice="required",  # ⭐ 强制调用工具
+                tool_choice="auto",  # ⭐ 强制调用工具
                 temperature=0.3
             )
 
@@ -138,20 +141,46 @@ class NLUEngine:
             }
         return self.sessions[session_id]
 
-    def _build_messages(self, user_input: str, context: Dict) -> List[Dict]:
-        """构建消息列表"""
-        messages = [
+    def _build_messages(self, user_input: str, context: Dict) -> List[Any]:
+        """构建消息列表（返回OpenAI消息参数对象）"""
+        message_dicts = [
             {"role": "system", "content": SYSTEM_PROMPT},
-            # 删除 few-shot 示例，依靠 system prompt 中的说明
         ]
 
         # 添加历史消息
-        messages.extend(context.get("history", [])[-10:])
+        history_messages = context.get("history", [])[-10:]
+        for msg in history_messages:
+            # 确保历史消息格式正确
+            if isinstance(msg, dict) and "role" in msg and "content" in msg:
+                message_dicts.append({
+                    "role": msg["role"],
+                    "content": msg["content"]
+                })
 
         # 添加当前用户输入
-        messages.append({"role": "user", "content": user_input})
+        message_dicts.append({"role": "user", "content": user_input})
 
-        return messages
+        # 转换为OpenAI消息参数
+        converted_messages = []
+        for msg in message_dicts:
+            converted_messages.append(self._convert_to_message_param(msg))
+
+        return converted_messages
+
+    def _convert_to_message_param(self, message_dict: Dict) -> Any:
+        """将字典消息转换为OpenAI消息参数"""
+        role = message_dict["role"]
+        content = message_dict.get("content", "")
+
+        if role == "system":
+            return ChatCompletionSystemMessageParam(role="system", content=content)
+        elif role == "user":
+            return ChatCompletionUserMessageParam(role="user", content=content)
+        elif role == "assistant":
+            return ChatCompletionAssistantMessageParam(role="assistant", content=content)
+        else:
+            # 其他角色默认作为用户消息处理
+            return ChatCompletionUserMessageParam(role="user", content=content)
 
     def _parse_response(self, response, context: Dict) -> NLUResult:
         """解析响应"""

@@ -118,7 +118,9 @@ FUNCTION_DEFINITIONS =[
         "type": "function",
         "function": {
             "name": "query_usage",
-            "description": "查询用户的流量、话费使用情况。当用户询问'用了多少流量'、'话费余额'、'剩余流量'时使用",
+            "description": """查询用户的流量、话费使用情况。
+            **使用场景**：当用户询问'用了多少流量'、'剩余流量'、'话费余额'、'还有多少'时使用。
+            **关键词**：用了、剩余、余额、消费、使用情况""",
             "parameters": {
                 "type": "object",
                 "properties": {
