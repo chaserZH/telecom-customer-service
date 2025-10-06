@@ -11,7 +11,7 @@ from core.dst.state_store import StateStore
 from core.dst.slot_manager import SlotManager
 from core.dst.context_manager import ContextManager
 from core.nlu.function_definitions import get_required_params
-from utils.logger import logger
+from utils import logger
 
 
 class DialogStateTracker:

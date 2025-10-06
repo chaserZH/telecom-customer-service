@@ -4,7 +4,7 @@
 
 from datetime import datetime
 from core.dst.dialog_state import DialogState
-from utils.logger import logger
+from utils import logger
 
 
 class StateManager:

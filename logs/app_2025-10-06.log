@@ -1,0 +1,378 @@
+2025-10-06 10:28:40.506 | INFO     | database.db_manager:_initialize:38 - 数据库连接初始化成功
+2025-10-06 10:28:40.506 | ERROR    | database.redis_manager:_initialize:45 - Redis连接池初始化失败: 'Settings' object has no attribute 'get'
+2025-10-06 10:28:40.549 | INFO     | core.nlu.nlu_engine:__init__:53 - ✓ NLU引擎初始化成功: DeepSeek (deepseek-chat)
+2025-10-06 10:28:40.549 | ERROR    | core.dst.state_store:__init__:28 - Redis初始化失败: Redis连接池未初始化, 使用内存存储
+2025-10-06 10:28:40.549 | INFO     | core.dst.dialog_state_tracker:__init__:27 - 对话状态跟踪器初始化完成
+2025-10-06 10:28:40.549 | INFO     | executor.db_executor:__init__:16 - 数据库执行器初始化完成
+2025-10-06 10:28:40.549 | INFO     | core.chatbot_dst:__init__:23 - 第二阶段对话系统初始化完成（含DST支持）
+2025-10-06 10:28:40.550 | INFO     | core.chatbot_dst:chat:46 - [persistence_test_001] 收到用户输入: 有100元以内的套餐吗
+2025-10-06 10:28:40.550 | INFO     | core.nlu.nlu_engine:understand:73 - [persistence_test_001] 开始NLU理解: 有100元以内的套餐吗
+2025-10-06 10:28:40.550 | DEBUG    | core.nlu.nlu_engine:understand:78 - [persistence_test_001] 预处理后: 有100元以内的套餐吗
+2025-10-06 10:28:40.550 | DEBUG    | core.nlu.nlu_engine:_build_messages:162 - 构建的消息: ['system: 你是一个专业的电信客服助手,负责帮助用户查询和办理流量套餐业...', 'user: 有100元以内的套餐吗...']
+2025-10-06 10:28:40.550 | INFO     | core.nlu.nlu_engine:understand:87 - 请求模型message=[{'role': 'system', 'content': '你是一个专业的电信客服助手,负责帮助用户查询和办理流量套餐业务。\n\n【⭐⭐⭐ 最重要原则】\n- **只处理用户的最后一条消息**，忽略之前的所有用户消息\n- 如果看到多个用户消息，只响应最后一个\n- 每次只调用一个与最后一条用户消息相关的函数\n\n【你的职责】\n1. 理解用户的自然语言需求\n2. **必须**识别用户意图并调用相应的函数，不要进行闲聊\n3. 当信息不完整时,友好地向用户确认缺失的信息\n4. 用专业但亲切的语气与用户交流\n\n【当前可用套餐】\n- 经济套餐: 10G/月, 50元/月, 无限制人群\n- 畅游套餐: 100G/月, 180元/月, 无限制人群\n- 无限套餐: 1000G/月, 300元/月, 无限制人群\n- 校园套餐: 200G/月, 150元/月, 在校生专享\n\n【意图识别规则】\n1. 套餐查询类（query_packages）:\n   - "有什么套餐"、"推荐套餐"、"便宜的套餐"、"100元以内的套餐"\n   - 关键词：套餐、推荐、查询、有什么、价格、便宜\n\n2. 当前套餐查询（query_current_package）:\n   - "我的套餐"、"当前套餐"、"我用的什么套餐"\n   - 关键词：我的、当前、现在的\n\n3. 使用情况查询（query_usage）:  \n   - "用了多少流量"、"剩余流量"、"话费余额"、"查询余量"、"流量使用情况"\n   - 关键词：用了、剩余、余额、余量、流量使用、使用情况\n\n4. 套餐办理（change_package）:\n   - "办理XX套餐"、"换成XX套餐"、"我要办理"\n   - 关键词：办理、更换、变更\n\n【函数调用决策】\n重要：如果对话历史中有多个用户消息，只根据最后一条用户消息来判断意图！\n1. 识别**最后一条用户消息**的关键词\n2. 匹配最相关的单一函数\n3. 只调用该函数\n4. 忽略之前的用户消息\n\n【理解规则】\n- 价格表达要准确理解: "100块以内"→price_max=100, "50元以上"→price_min=50\n- "便宜点的"、"经济实惠"等模糊表达→sort_by="price_asc"\n- "学生套餐"、"校园"→target_user="在校生"\n- 如果用户没有提供手机号,需要礼貌询问，不要从function definitions的description中提取信息当作用户输入的。比如手机号\n\n【重要】\n- **只响应最后一条用户消息**\n- **一次只调用一个函数**\n- 不要试图同时处理多个问题\n- 回答要简洁明了\n'}, {'role': 'user', 'content': '有100元以内的套餐吗'}]
+2025-10-06 10:28:43.040 | INFO     | core.nlu.nlu_engine:_parse_response:189 - 解析响应=ChatCompletion(id='779fa0b8-cf8c-4142-9dbc-0a440d6ec298', choices=[Choice(finish_reason='tool_calls', index=0, logprobs=None, message=ChatCompletionMessage(content='', refusal=None, role='assistant', annotations=None, audio=None, function_call=None, tool_calls=[ChatCompletionMessageFunctionToolCall(id='call_00_pVun0B74ZLVrK1EifOBNu0da', function=Function(arguments='{"price_max": 100, "sort_by": "price_asc"}', name='query_packages'), type='function', index=0)]))], created=1759717720, model='deepseek-chat', object='chat.completion', service_tier=None, system_fingerprint='fp_ffc7281d48_prod0820_fp8_kvcache', usage=CompletionUsage(completion_tokens=23, prompt_tokens=1541, total_tokens=1564, completion_tokens_details=None, prompt_tokens_details=PromptTokensDetails(audio_tokens=None, cached_tokens=1472), prompt_cache_hit_tokens=1472, prompt_cache_miss_tokens=69))
+2025-10-06 10:28:43.041 | INFO     | core.nlu.nlu_engine:_parse_response:190 - 解析响应: tool_calls数量=1
+2025-10-06 10:28:43.041 | INFO     | core.nlu.nlu_engine:_update_session:351 - [persistence_test_001] 意图切换: None -> query_packages
+2025-10-06 10:28:43.041 | INFO     | core.nlu.nlu_engine:understand:105 - [persistence_test_001] NLU完成: intent=query_packages
+2025-10-06 10:28:43.041 | INFO     | core.dst.dialog_state_tracker:track:40 - [DST] 开始跟踪会话: persistence_test_001
+2025-10-06 10:28:43.041 | DEBUG    | core.dst.state_store:_load_from_memory:121 - 内存中不存在会话: persistence_test_001, 返回新状态
+2025-10-06 10:28:43.041 | INFO     | core.dst.dialog_state_tracker:track:59 - 意图改变: None → query_packages
+2025-10-06 10:28:43.041 | INFO     | core.dst.slot_manager:fill_slots:61 - 不同领域，仅保留用户信息: []
+2025-10-06 10:28:43.041 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: persistence_test_001
+2025-10-06 10:28:43.041 | INFO     | core.dst.dialog_state_tracker:track:112 - [DST] 状态跟踪完成: turn=1, 需要澄清=False
+2025-10-06 10:28:43.041 | INFO     | executor.db_executor:execute_function:29 - 执行Function: query_packages, 参数: {'price_max': 100, 'sort_by': 'price_asc'}
+2025-10-06 10:28:43.110 | INFO     | executor.db_executor:execute_function:50 - Function执行成功: query_packages
+2025-10-06 10:28:43.111 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: persistence_test_001
+2025-10-06 10:28:43.111 | INFO     | core.chatbot_dst:_log_conversation:234 - [persistence_test_001] 对话完成 | 意图: query_packages | 轮次: 2 | 耗时: 2561ms
+2025-10-06 10:28:43.137 | INFO     | core.nlu.nlu_engine:__init__:53 - ✓ NLU引擎初始化成功: DeepSeek (deepseek-chat)
+2025-10-06 10:28:43.137 | ERROR    | core.dst.state_store:__init__:28 - Redis初始化失败: Redis连接池未初始化, 使用内存存储
+2025-10-06 10:28:43.137 | INFO     | core.dst.dialog_state_tracker:__init__:27 - 对话状态跟踪器初始化完成
+2025-10-06 10:28:43.137 | INFO     | executor.db_executor:__init__:16 - 数据库执行器初始化完成
+2025-10-06 10:28:43.138 | INFO     | core.chatbot_dst:__init__:23 - 第二阶段对话系统初始化完成（含DST支持）
+2025-10-06 10:28:43.138 | INFO     | core.chatbot_dst:chat:46 - [persistence_test_001] 收到用户输入: 流量要50G以上
+2025-10-06 10:28:43.138 | INFO     | core.nlu.nlu_engine:understand:73 - [persistence_test_001] 开始NLU理解: 流量要50G以上
+2025-10-06 10:28:43.138 | DEBUG    | core.nlu.nlu_engine:understand:78 - [persistence_test_001] 预处理后: 流量要50G以上
+2025-10-06 10:28:43.138 | DEBUG    | core.nlu.nlu_engine:_build_messages:162 - 构建的消息: ['system: 你是一个专业的电信客服助手,负责帮助用户查询和办理流量套餐业...', 'user: 流量要50G以上...']
+2025-10-06 10:28:43.138 | INFO     | core.nlu.nlu_engine:understand:87 - 请求模型message=[{'role': 'system', 'content': '你是一个专业的电信客服助手,负责帮助用户查询和办理流量套餐业务。\n\n【⭐⭐⭐ 最重要原则】\n- **只处理用户的最后一条消息**，忽略之前的所有用户消息\n- 如果看到多个用户消息，只响应最后一个\n- 每次只调用一个与最后一条用户消息相关的函数\n\n【你的职责】\n1. 理解用户的自然语言需求\n2. **必须**识别用户意图并调用相应的函数，不要进行闲聊\n3. 当信息不完整时,友好地向用户确认缺失的信息\n4. 用专业但亲切的语气与用户交流\n\n【当前可用套餐】\n- 经济套餐: 10G/月, 50元/月, 无限制人群\n- 畅游套餐: 100G/月, 180元/月, 无限制人群\n- 无限套餐: 1000G/月, 300元/月, 无限制人群\n- 校园套餐: 200G/月, 150元/月, 在校生专享\n\n【意图识别规则】\n1. 套餐查询类（query_packages）:\n   - "有什么套餐"、"推荐套餐"、"便宜的套餐"、"100元以内的套餐"\n   - 关键词：套餐、推荐、查询、有什么、价格、便宜\n\n2. 当前套餐查询（query_current_package）:\n   - "我的套餐"、"当前套餐"、"我用的什么套餐"\n   - 关键词：我的、当前、现在的\n\n3. 使用情况查询（query_usage）:  \n   - "用了多少流量"、"剩余流量"、"话费余额"、"查询余量"、"流量使用情况"\n   - 关键词：用了、剩余、余额、余量、流量使用、使用情况\n\n4. 套餐办理（change_package）:\n   - "办理XX套餐"、"换成XX套餐"、"我要办理"\n   - 关键词：办理、更换、变更\n\n【函数调用决策】\n重要：如果对话历史中有多个用户消息，只根据最后一条用户消息来判断意图！\n1. 识别**最后一条用户消息**的关键词\n2. 匹配最相关的单一函数\n3. 只调用该函数\n4. 忽略之前的用户消息\n\n【理解规则】\n- 价格表达要准确理解: "100块以内"→price_max=100, "50元以上"→price_min=50\n- "便宜点的"、"经济实惠"等模糊表达→sort_by="price_asc"\n- "学生套餐"、"校园"→target_user="在校生"\n- 如果用户没有提供手机号,需要礼貌询问，不要从function definitions的description中提取信息当作用户输入的。比如手机号\n\n【重要】\n- **只响应最后一条用户消息**\n- **一次只调用一个函数**\n- 不要试图同时处理多个问题\n- 回答要简洁明了\n'}, {'role': 'user', 'content': '流量要50G以上'}]
+2025-10-06 10:28:45.570 | INFO     | core.nlu.nlu_engine:_parse_response:189 - 解析响应=ChatCompletion(id='70511d47-0178-44de-8b70-6d01431006ab', choices=[Choice(finish_reason='tool_calls', index=0, logprobs=None, message=ChatCompletionMessage(content='', refusal=None, role='assistant', annotations=None, audio=None, function_call=None, tool_calls=[ChatCompletionMessageFunctionToolCall(id='call_00_wo4UeYRfDASXKPduBw1irLKg', function=Function(arguments='{"data_min": 50, "sort_by": "price_asc"}', name='query_packages'), type='function', index=0)]))], created=1759717723, model='deepseek-chat', object='chat.completion', service_tier=None, system_fingerprint='fp_ffc7281d48_prod0820_fp8_kvcache', usage=CompletionUsage(completion_tokens=23, prompt_tokens=1540, total_tokens=1563, completion_tokens_details=None, prompt_tokens_details=PromptTokensDetails(audio_tokens=None, cached_tokens=1472), prompt_cache_hit_tokens=1472, prompt_cache_miss_tokens=68))
+2025-10-06 10:28:45.570 | INFO     | core.nlu.nlu_engine:_parse_response:190 - 解析响应: tool_calls数量=1
+2025-10-06 10:28:45.570 | INFO     | core.nlu.nlu_engine:_update_session:351 - [persistence_test_001] 意图切换: None -> query_packages
+2025-10-06 10:28:45.570 | INFO     | core.nlu.nlu_engine:understand:105 - [persistence_test_001] NLU完成: intent=query_packages
+2025-10-06 10:28:45.571 | INFO     | core.dst.dialog_state_tracker:track:40 - [DST] 开始跟踪会话: persistence_test_001
+2025-10-06 10:28:45.571 | DEBUG    | core.dst.state_store:_load_from_memory:121 - 内存中不存在会话: persistence_test_001, 返回新状态
+2025-10-06 10:28:45.571 | INFO     | core.dst.dialog_state_tracker:track:59 - 意图改变: None → query_packages
+2025-10-06 10:28:45.571 | INFO     | core.dst.slot_manager:fill_slots:61 - 不同领域，仅保留用户信息: []
+2025-10-06 10:28:45.571 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: persistence_test_001
+2025-10-06 10:28:45.571 | INFO     | core.dst.dialog_state_tracker:track:112 - [DST] 状态跟踪完成: turn=1, 需要澄清=False
+2025-10-06 10:28:45.571 | INFO     | executor.db_executor:execute_function:29 - 执行Function: query_packages, 参数: {'data_min': 50, 'sort_by': 'price_asc'}
+2025-10-06 10:28:45.577 | INFO     | executor.db_executor:execute_function:50 - Function执行成功: query_packages
+2025-10-06 10:28:45.577 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: persistence_test_001
+2025-10-06 10:28:45.578 | INFO     | core.chatbot_dst:_log_conversation:234 - [persistence_test_001] 对话完成 | 意图: query_packages | 轮次: 2 | 耗时: 2440ms
+2025-10-06 10:29:51.997 | INFO     | database.db_manager:_initialize:38 - 数据库连接初始化成功
+2025-10-06 10:29:51.997 | ERROR    | database.redis_manager:_initialize:45 - Redis连接池初始化失败: 'Settings' object has no attribute 'get'
+2025-10-06 10:29:52.070 | INFO     | core.nlu.nlu_engine:__init__:53 - ✓ NLU引擎初始化成功: DeepSeek (deepseek-chat)
+2025-10-06 10:29:52.071 | ERROR    | core.dst.state_store:__init__:28 - Redis初始化失败: Redis连接池未初始化, 使用内存存储
+2025-10-06 10:29:52.071 | INFO     | core.dst.dialog_state_tracker:__init__:27 - 对话状态跟踪器初始化完成
+2025-10-06 10:29:52.071 | INFO     | executor.db_executor:__init__:16 - 数据库执行器初始化完成
+2025-10-06 10:29:52.071 | INFO     | core.chatbot_dst:__init__:23 - 第二阶段对话系统初始化完成（含DST支持）
+2025-10-06 10:29:56.564 | INFO     | core.chatbot_dst:chat:46 - [persistence_test_001] 收到用户输入: 有100元以内的套餐吗
+2025-10-06 10:29:56.564 | INFO     | core.nlu.nlu_engine:understand:73 - [persistence_test_001] 开始NLU理解: 有100元以内的套餐吗
+2025-10-06 10:29:56.565 | DEBUG    | core.nlu.nlu_engine:understand:78 - [persistence_test_001] 预处理后: 有100元以内的套餐吗
+2025-10-06 10:29:56.565 | DEBUG    | core.nlu.nlu_engine:_build_messages:162 - 构建的消息: ['system: 你是一个专业的电信客服助手,负责帮助用户查询和办理流量套餐业...', 'user: 有100元以内的套餐吗...']
+2025-10-06 10:29:56.565 | INFO     | core.nlu.nlu_engine:understand:87 - 请求模型message=[{'role': 'system', 'content': '你是一个专业的电信客服助手,负责帮助用户查询和办理流量套餐业务。\n\n【⭐⭐⭐ 最重要原则】\n- **只处理用户的最后一条消息**，忽略之前的所有用户消息\n- 如果看到多个用户消息，只响应最后一个\n- 每次只调用一个与最后一条用户消息相关的函数\n\n【你的职责】\n1. 理解用户的自然语言需求\n2. **必须**识别用户意图并调用相应的函数，不要进行闲聊\n3. 当信息不完整时,友好地向用户确认缺失的信息\n4. 用专业但亲切的语气与用户交流\n\n【当前可用套餐】\n- 经济套餐: 10G/月, 50元/月, 无限制人群\n- 畅游套餐: 100G/月, 180元/月, 无限制人群\n- 无限套餐: 1000G/月, 300元/月, 无限制人群\n- 校园套餐: 200G/月, 150元/月, 在校生专享\n\n【意图识别规则】\n1. 套餐查询类（query_packages）:\n   - "有什么套餐"、"推荐套餐"、"便宜的套餐"、"100元以内的套餐"\n   - 关键词：套餐、推荐、查询、有什么、价格、便宜\n\n2. 当前套餐查询（query_current_package）:\n   - "我的套餐"、"当前套餐"、"我用的什么套餐"\n   - 关键词：我的、当前、现在的\n\n3. 使用情况查询（query_usage）:  \n   - "用了多少流量"、"剩余流量"、"话费余额"、"查询余量"、"流量使用情况"\n   - 关键词：用了、剩余、余额、余量、流量使用、使用情况\n\n4. 套餐办理（change_package）:\n   - "办理XX套餐"、"换成XX套餐"、"我要办理"\n   - 关键词：办理、更换、变更\n\n【函数调用决策】\n重要：如果对话历史中有多个用户消息，只根据最后一条用户消息来判断意图！\n1. 识别**最后一条用户消息**的关键词\n2. 匹配最相关的单一函数\n3. 只调用该函数\n4. 忽略之前的用户消息\n\n【理解规则】\n- 价格表达要准确理解: "100块以内"→price_max=100, "50元以上"→price_min=50\n- "便宜点的"、"经济实惠"等模糊表达→sort_by="price_asc"\n- "学生套餐"、"校园"→target_user="在校生"\n- 如果用户没有提供手机号,需要礼貌询问，不要从function definitions的description中提取信息当作用户输入的。比如手机号\n\n【重要】\n- **只响应最后一条用户消息**\n- **一次只调用一个函数**\n- 不要试图同时处理多个问题\n- 回答要简洁明了\n'}, {'role': 'user', 'content': '有100元以内的套餐吗'}]
+2025-10-06 10:30:01.316 | INFO     | core.nlu.nlu_engine:_parse_response:189 - 解析响应=ChatCompletion(id='735db366-d863-4c5c-ad2e-dd867ee264c1', choices=[Choice(finish_reason='tool_calls', index=0, logprobs=None, message=ChatCompletionMessage(content='', refusal=None, role='assistant', annotations=None, audio=None, function_call=None, tool_calls=[ChatCompletionMessageFunctionToolCall(id='call_00_mLM5h45dE7Q6tjN98p5stiXM', function=Function(arguments='{"price_max": 100, "sort_by": "price_asc"}', name='query_packages'), type='function', index=0)]))], created=1759717797, model='deepseek-chat', object='chat.completion', service_tier=None, system_fingerprint='fp_ffc7281d48_prod0820_fp8_kvcache', usage=CompletionUsage(completion_tokens=23, prompt_tokens=1541, total_tokens=1564, completion_tokens_details=None, prompt_tokens_details=PromptTokensDetails(audio_tokens=None, cached_tokens=1536), prompt_cache_hit_tokens=1536, prompt_cache_miss_tokens=5))
+2025-10-06 10:30:01.317 | INFO     | core.nlu.nlu_engine:_parse_response:190 - 解析响应: tool_calls数量=1
+2025-10-06 10:30:01.317 | INFO     | core.nlu.nlu_engine:_update_session:351 - [persistence_test_001] 意图切换: None -> query_packages
+2025-10-06 10:30:01.317 | INFO     | core.nlu.nlu_engine:understand:105 - [persistence_test_001] NLU完成: intent=query_packages
+2025-10-06 10:30:01.317 | INFO     | core.dst.dialog_state_tracker:track:40 - [DST] 开始跟踪会话: persistence_test_001
+2025-10-06 10:30:01.317 | DEBUG    | core.dst.state_store:_load_from_memory:121 - 内存中不存在会话: persistence_test_001, 返回新状态
+2025-10-06 10:30:01.317 | INFO     | core.dst.dialog_state_tracker:track:59 - 意图改变: None → query_packages
+2025-10-06 10:30:09.794 | INFO     | core.dst.slot_manager:fill_slots:61 - 不同领域，仅保留用户信息: []
+2025-10-06 10:30:12.177 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: persistence_test_001
+2025-10-06 10:30:12.178 | INFO     | core.dst.dialog_state_tracker:track:112 - [DST] 状态跟踪完成: turn=1, 需要澄清=False
+2025-10-06 10:30:14.243 | INFO     | executor.db_executor:execute_function:29 - 执行Function: query_packages, 参数: {'price_max': 100, 'sort_by': 'price_asc'}
+2025-10-06 10:30:14.312 | INFO     | executor.db_executor:execute_function:50 - Function执行成功: query_packages
+2025-10-06 10:30:14.312 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: persistence_test_001
+2025-10-06 10:30:14.313 | INFO     | core.chatbot_dst:_log_conversation:234 - [persistence_test_001] 对话完成 | 意图: query_packages | 轮次: 2 | 耗时: 17749ms
+2025-10-06 10:30:17.458 | INFO     | core.nlu.nlu_engine:__init__:53 - ✓ NLU引擎初始化成功: DeepSeek (deepseek-chat)
+2025-10-06 10:30:17.459 | ERROR    | core.dst.state_store:__init__:28 - Redis初始化失败: Redis连接池未初始化, 使用内存存储
+2025-10-06 10:30:17.459 | INFO     | core.dst.dialog_state_tracker:__init__:27 - 对话状态跟踪器初始化完成
+2025-10-06 10:30:17.460 | INFO     | executor.db_executor:__init__:16 - 数据库执行器初始化完成
+2025-10-06 10:30:17.460 | INFO     | core.chatbot_dst:__init__:23 - 第二阶段对话系统初始化完成（含DST支持）
+2025-10-06 10:30:47.384 | INFO     | core.chatbot_dst:chat:46 - [persistence_test_001] 收到用户输入: 流量要50G以上
+2025-10-06 10:30:56.557 | INFO     | core.nlu.nlu_engine:understand:73 - [persistence_test_001] 开始NLU理解: 流量要50G以上
+2025-10-06 10:30:56.559 | DEBUG    | core.nlu.nlu_engine:understand:78 - [persistence_test_001] 预处理后: 流量要50G以上
+2025-10-06 10:30:56.559 | DEBUG    | core.nlu.nlu_engine:_build_messages:162 - 构建的消息: ['system: 你是一个专业的电信客服助手,负责帮助用户查询和办理流量套餐业...', 'user: 流量要50G以上...']
+2025-10-06 10:30:56.560 | INFO     | core.nlu.nlu_engine:understand:87 - 请求模型message=[{'role': 'system', 'content': '你是一个专业的电信客服助手,负责帮助用户查询和办理流量套餐业务。\n\n【⭐⭐⭐ 最重要原则】\n- **只处理用户的最后一条消息**，忽略之前的所有用户消息\n- 如果看到多个用户消息，只响应最后一个\n- 每次只调用一个与最后一条用户消息相关的函数\n\n【你的职责】\n1. 理解用户的自然语言需求\n2. **必须**识别用户意图并调用相应的函数，不要进行闲聊\n3. 当信息不完整时,友好地向用户确认缺失的信息\n4. 用专业但亲切的语气与用户交流\n\n【当前可用套餐】\n- 经济套餐: 10G/月, 50元/月, 无限制人群\n- 畅游套餐: 100G/月, 180元/月, 无限制人群\n- 无限套餐: 1000G/月, 300元/月, 无限制人群\n- 校园套餐: 200G/月, 150元/月, 在校生专享\n\n【意图识别规则】\n1. 套餐查询类（query_packages）:\n   - "有什么套餐"、"推荐套餐"、"便宜的套餐"、"100元以内的套餐"\n   - 关键词：套餐、推荐、查询、有什么、价格、便宜\n\n2. 当前套餐查询（query_current_package）:\n   - "我的套餐"、"当前套餐"、"我用的什么套餐"\n   - 关键词：我的、当前、现在的\n\n3. 使用情况查询（query_usage）:  \n   - "用了多少流量"、"剩余流量"、"话费余额"、"查询余量"、"流量使用情况"\n   - 关键词：用了、剩余、余额、余量、流量使用、使用情况\n\n4. 套餐办理（change_package）:\n   - "办理XX套餐"、"换成XX套餐"、"我要办理"\n   - 关键词：办理、更换、变更\n\n【函数调用决策】\n重要：如果对话历史中有多个用户消息，只根据最后一条用户消息来判断意图！\n1. 识别**最后一条用户消息**的关键词\n2. 匹配最相关的单一函数\n3. 只调用该函数\n4. 忽略之前的用户消息\n\n【理解规则】\n- 价格表达要准确理解: "100块以内"→price_max=100, "50元以上"→price_min=50\n- "便宜点的"、"经济实惠"等模糊表达→sort_by="price_asc"\n- "学生套餐"、"校园"→target_user="在校生"\n- 如果用户没有提供手机号,需要礼貌询问，不要从function definitions的description中提取信息当作用户输入的。比如手机号\n\n【重要】\n- **只响应最后一条用户消息**\n- **一次只调用一个函数**\n- 不要试图同时处理多个问题\n- 回答要简洁明了\n'}, {'role': 'user', 'content': '流量要50G以上'}]
+2025-10-06 10:30:59.312 | INFO     | core.nlu.nlu_engine:_parse_response:189 - 解析响应=ChatCompletion(id='b4a600f5-ca8b-4ed7-9166-2b5eee747c0d', choices=[Choice(finish_reason='tool_calls', index=0, logprobs=None, message=ChatCompletionMessage(content='', refusal=None, role='assistant', annotations=None, audio=None, function_call=None, tool_calls=[ChatCompletionMessageFunctionToolCall(id='call_00_QHLEU0Mm302pultDw6kfqpfa', function=Function(arguments='{"data_min": 50, "sort_by": "price_asc"}', name='query_packages'), type='function', index=0)]))], created=1759717856, model='deepseek-chat', object='chat.completion', service_tier=None, system_fingerprint='fp_ffc7281d48_prod0820_fp8_kvcache', usage=CompletionUsage(completion_tokens=23, prompt_tokens=1540, total_tokens=1563, completion_tokens_details=None, prompt_tokens_details=PromptTokensDetails(audio_tokens=None, cached_tokens=1536), prompt_cache_hit_tokens=1536, prompt_cache_miss_tokens=4))
+2025-10-06 10:30:59.313 | INFO     | core.nlu.nlu_engine:_parse_response:190 - 解析响应: tool_calls数量=1
+2025-10-06 10:30:59.314 | INFO     | core.nlu.nlu_engine:_update_session:351 - [persistence_test_001] 意图切换: None -> query_packages
+2025-10-06 10:30:59.314 | INFO     | core.nlu.nlu_engine:understand:105 - [persistence_test_001] NLU完成: intent=query_packages
+2025-10-06 10:31:02.878 | INFO     | core.dst.dialog_state_tracker:track:40 - [DST] 开始跟踪会话: persistence_test_001
+2025-10-06 10:31:02.880 | DEBUG    | core.dst.state_store:_load_from_memory:121 - 内存中不存在会话: persistence_test_001, 返回新状态
+2025-10-06 10:31:02.881 | INFO     | core.dst.dialog_state_tracker:track:59 - 意图改变: None → query_packages
+2025-10-06 10:31:51.906 | INFO     | core.dst.slot_manager:fill_slots:61 - 不同领域，仅保留用户信息: []
+2025-10-06 10:31:52.887 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: persistence_test_001
+2025-10-06 10:31:52.888 | INFO     | core.dst.dialog_state_tracker:track:112 - [DST] 状态跟踪完成: turn=1, 需要澄清=False
+2025-10-06 10:31:54.693 | INFO     | executor.db_executor:execute_function:29 - 执行Function: query_packages, 参数: {'data_min': 50, 'sort_by': 'price_asc'}
+2025-10-06 10:31:54.734 | INFO     | executor.db_executor:execute_function:50 - Function执行成功: query_packages
+2025-10-06 10:31:54.735 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: persistence_test_001
+2025-10-06 10:31:54.736 | INFO     | core.chatbot_dst:_log_conversation:234 - [persistence_test_001] 对话完成 | 意图: query_packages | 轮次: 2 | 耗时: 70019ms
+2025-10-06 10:33:09.174 | INFO     | database.db_manager:_initialize:38 - 数据库连接初始化成功
+2025-10-06 10:33:09.174 | ERROR    | database.redis_manager:_initialize:45 - Redis连接池初始化失败: 'Settings' object has no attribute 'get'
+2025-10-06 10:33:09.213 | INFO     | core.nlu.nlu_engine:__init__:53 - ✓ NLU引擎初始化成功: DeepSeek (deepseek-chat)
+2025-10-06 10:33:09.213 | ERROR    | core.dst.state_store:__init__:28 - Redis初始化失败: Redis连接池未初始化, 使用内存存储
+2025-10-06 10:33:09.213 | INFO     | core.dst.dialog_state_tracker:__init__:27 - 对话状态跟踪器初始化完成
+2025-10-06 10:33:09.213 | INFO     | executor.db_executor:__init__:16 - 数据库执行器初始化完成
+2025-10-06 10:33:09.213 | INFO     | core.chatbot_dst:__init__:23 - 第二阶段对话系统初始化完成（含DST支持）
+2025-10-06 10:33:09.214 | INFO     | core.chatbot_dst:chat:46 - [persistence_test_001] 收到用户输入: 有100元以内的套餐吗
+2025-10-06 10:33:09.214 | INFO     | core.nlu.nlu_engine:understand:73 - [persistence_test_001] 开始NLU理解: 有100元以内的套餐吗
+2025-10-06 10:33:09.214 | DEBUG    | core.nlu.nlu_engine:understand:78 - [persistence_test_001] 预处理后: 有100元以内的套餐吗
+2025-10-06 10:33:09.214 | DEBUG    | core.nlu.nlu_engine:_build_messages:162 - 构建的消息: ['system: 你是一个专业的电信客服助手,负责帮助用户查询和办理流量套餐业...', 'user: 有100元以内的套餐吗...']
+2025-10-06 10:33:09.214 | INFO     | core.nlu.nlu_engine:understand:87 - 请求模型message=[{'role': 'system', 'content': '你是一个专业的电信客服助手,负责帮助用户查询和办理流量套餐业务。\n\n【⭐⭐⭐ 最重要原则】\n- **只处理用户的最后一条消息**，忽略之前的所有用户消息\n- 如果看到多个用户消息，只响应最后一个\n- 每次只调用一个与最后一条用户消息相关的函数\n\n【你的职责】\n1. 理解用户的自然语言需求\n2. **必须**识别用户意图并调用相应的函数，不要进行闲聊\n3. 当信息不完整时,友好地向用户确认缺失的信息\n4. 用专业但亲切的语气与用户交流\n\n【当前可用套餐】\n- 经济套餐: 10G/月, 50元/月, 无限制人群\n- 畅游套餐: 100G/月, 180元/月, 无限制人群\n- 无限套餐: 1000G/月, 300元/月, 无限制人群\n- 校园套餐: 200G/月, 150元/月, 在校生专享\n\n【意图识别规则】\n1. 套餐查询类（query_packages）:\n   - "有什么套餐"、"推荐套餐"、"便宜的套餐"、"100元以内的套餐"\n   - 关键词：套餐、推荐、查询、有什么、价格、便宜\n\n2. 当前套餐查询（query_current_package）:\n   - "我的套餐"、"当前套餐"、"我用的什么套餐"\n   - 关键词：我的、当前、现在的\n\n3. 使用情况查询（query_usage）:  \n   - "用了多少流量"、"剩余流量"、"话费余额"、"查询余量"、"流量使用情况"\n   - 关键词：用了、剩余、余额、余量、流量使用、使用情况\n\n4. 套餐办理（change_package）:\n   - "办理XX套餐"、"换成XX套餐"、"我要办理"\n   - 关键词：办理、更换、变更\n\n【函数调用决策】\n重要：如果对话历史中有多个用户消息，只根据最后一条用户消息来判断意图！\n1. 识别**最后一条用户消息**的关键词\n2. 匹配最相关的单一函数\n3. 只调用该函数\n4. 忽略之前的用户消息\n\n【理解规则】\n- 价格表达要准确理解: "100块以内"→price_max=100, "50元以上"→price_min=50\n- "便宜点的"、"经济实惠"等模糊表达→sort_by="price_asc"\n- "学生套餐"、"校园"→target_user="在校生"\n- 如果用户没有提供手机号,需要礼貌询问，不要从function definitions的description中提取信息当作用户输入的。比如手机号\n\n【重要】\n- **只响应最后一条用户消息**\n- **一次只调用一个函数**\n- 不要试图同时处理多个问题\n- 回答要简洁明了\n'}, {'role': 'user', 'content': '有100元以内的套餐吗'}]
+2025-10-06 10:33:11.584 | INFO     | core.nlu.nlu_engine:_parse_response:189 - 解析响应=ChatCompletion(id='14946ad0-5d3d-4498-9d74-2798ee2f201c', choices=[Choice(finish_reason='tool_calls', index=0, logprobs=None, message=ChatCompletionMessage(content='', refusal=None, role='assistant', annotations=None, audio=None, function_call=None, tool_calls=[ChatCompletionMessageFunctionToolCall(id='call_00_ZooHbTVL1l9DbYIdwLQRFY0c', function=Function(arguments='{"price_max": 100, "sort_by": "price_asc"}', name='query_packages'), type='function', index=0)]))], created=1759717989, model='deepseek-chat', object='chat.completion', service_tier=None, system_fingerprint='fp_ffc7281d48_prod0820_fp8_kvcache', usage=CompletionUsage(completion_tokens=23, prompt_tokens=1541, total_tokens=1564, completion_tokens_details=None, prompt_tokens_details=PromptTokensDetails(audio_tokens=None, cached_tokens=1536), prompt_cache_hit_tokens=1536, prompt_cache_miss_tokens=5))
+2025-10-06 10:33:11.585 | INFO     | core.nlu.nlu_engine:_parse_response:190 - 解析响应: tool_calls数量=1
+2025-10-06 10:33:11.585 | INFO     | core.nlu.nlu_engine:_update_session:351 - [persistence_test_001] 意图切换: None -> query_packages
+2025-10-06 10:33:11.585 | INFO     | core.nlu.nlu_engine:understand:105 - [persistence_test_001] NLU完成: intent=query_packages
+2025-10-06 10:33:11.585 | INFO     | core.dst.dialog_state_tracker:track:40 - [DST] 开始跟踪会话: persistence_test_001
+2025-10-06 10:33:11.585 | DEBUG    | core.dst.state_store:_load_from_memory:121 - 内存中不存在会话: persistence_test_001, 返回新状态
+2025-10-06 10:33:11.585 | INFO     | core.dst.dialog_state_tracker:track:59 - 意图改变: None → query_packages
+2025-10-06 10:33:11.585 | INFO     | core.dst.slot_manager:fill_slots:61 - 不同领域，仅保留用户信息: []
+2025-10-06 10:33:11.585 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: persistence_test_001
+2025-10-06 10:33:11.585 | INFO     | core.dst.dialog_state_tracker:track:112 - [DST] 状态跟踪完成: turn=1, 需要澄清=False
+2025-10-06 10:33:11.585 | INFO     | executor.db_executor:execute_function:29 - 执行Function: query_packages, 参数: {'price_max': 100, 'sort_by': 'price_asc'}
+2025-10-06 10:33:11.639 | INFO     | executor.db_executor:execute_function:50 - Function执行成功: query_packages
+2025-10-06 10:33:11.639 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: persistence_test_001
+2025-10-06 10:33:11.640 | INFO     | core.chatbot_dst:_log_conversation:234 - [persistence_test_001] 对话完成 | 意图: query_packages | 轮次: 2 | 耗时: 2426ms
+2025-10-06 10:33:11.663 | INFO     | core.nlu.nlu_engine:__init__:53 - ✓ NLU引擎初始化成功: DeepSeek (deepseek-chat)
+2025-10-06 10:33:11.663 | ERROR    | core.dst.state_store:__init__:28 - Redis初始化失败: Redis连接池未初始化, 使用内存存储
+2025-10-06 10:33:11.663 | INFO     | core.dst.dialog_state_tracker:__init__:27 - 对话状态跟踪器初始化完成
+2025-10-06 10:33:11.663 | INFO     | executor.db_executor:__init__:16 - 数据库执行器初始化完成
+2025-10-06 10:33:11.663 | INFO     | core.chatbot_dst:__init__:23 - 第二阶段对话系统初始化完成（含DST支持）
+2025-10-06 10:33:11.663 | INFO     | core.chatbot_dst:chat:46 - [persistence_test_001] 收到用户输入: 流量要50G以上
+2025-10-06 10:33:11.663 | INFO     | core.nlu.nlu_engine:understand:73 - [persistence_test_001] 开始NLU理解: 流量要50G以上
+2025-10-06 10:33:11.663 | DEBUG    | core.nlu.nlu_engine:understand:78 - [persistence_test_001] 预处理后: 流量要50G以上
+2025-10-06 10:33:11.663 | DEBUG    | core.nlu.nlu_engine:_build_messages:162 - 构建的消息: ['system: 你是一个专业的电信客服助手,负责帮助用户查询和办理流量套餐业...', 'user: 流量要50G以上...']
+2025-10-06 10:33:11.663 | INFO     | core.nlu.nlu_engine:understand:87 - 请求模型message=[{'role': 'system', 'content': '你是一个专业的电信客服助手,负责帮助用户查询和办理流量套餐业务。\n\n【⭐⭐⭐ 最重要原则】\n- **只处理用户的最后一条消息**，忽略之前的所有用户消息\n- 如果看到多个用户消息，只响应最后一个\n- 每次只调用一个与最后一条用户消息相关的函数\n\n【你的职责】\n1. 理解用户的自然语言需求\n2. **必须**识别用户意图并调用相应的函数，不要进行闲聊\n3. 当信息不完整时,友好地向用户确认缺失的信息\n4. 用专业但亲切的语气与用户交流\n\n【当前可用套餐】\n- 经济套餐: 10G/月, 50元/月, 无限制人群\n- 畅游套餐: 100G/月, 180元/月, 无限制人群\n- 无限套餐: 1000G/月, 300元/月, 无限制人群\n- 校园套餐: 200G/月, 150元/月, 在校生专享\n\n【意图识别规则】\n1. 套餐查询类（query_packages）:\n   - "有什么套餐"、"推荐套餐"、"便宜的套餐"、"100元以内的套餐"\n   - 关键词：套餐、推荐、查询、有什么、价格、便宜\n\n2. 当前套餐查询（query_current_package）:\n   - "我的套餐"、"当前套餐"、"我用的什么套餐"\n   - 关键词：我的、当前、现在的\n\n3. 使用情况查询（query_usage）:  \n   - "用了多少流量"、"剩余流量"、"话费余额"、"查询余量"、"流量使用情况"\n   - 关键词：用了、剩余、余额、余量、流量使用、使用情况\n\n4. 套餐办理（change_package）:\n   - "办理XX套餐"、"换成XX套餐"、"我要办理"\n   - 关键词：办理、更换、变更\n\n【函数调用决策】\n重要：如果对话历史中有多个用户消息，只根据最后一条用户消息来判断意图！\n1. 识别**最后一条用户消息**的关键词\n2. 匹配最相关的单一函数\n3. 只调用该函数\n4. 忽略之前的用户消息\n\n【理解规则】\n- 价格表达要准确理解: "100块以内"→price_max=100, "50元以上"→price_min=50\n- "便宜点的"、"经济实惠"等模糊表达→sort_by="price_asc"\n- "学生套餐"、"校园"→target_user="在校生"\n- 如果用户没有提供手机号,需要礼貌询问，不要从function definitions的description中提取信息当作用户输入的。比如手机号\n\n【重要】\n- **只响应最后一条用户消息**\n- **一次只调用一个函数**\n- 不要试图同时处理多个问题\n- 回答要简洁明了\n'}, {'role': 'user', 'content': '流量要50G以上'}]
+2025-10-06 10:33:14.190 | INFO     | core.nlu.nlu_engine:_parse_response:189 - 解析响应=ChatCompletion(id='e7868090-0cf9-4456-bddc-0b3a17a35735', choices=[Choice(finish_reason='tool_calls', index=0, logprobs=None, message=ChatCompletionMessage(content='', refusal=None, role='assistant', annotations=None, audio=None, function_call=None, tool_calls=[ChatCompletionMessageFunctionToolCall(id='call_00_vdEzJgQTWFJ94UihjtMNGJTk', function=Function(arguments='{"data_min": 50, "sort_by": "price_asc"}', name='query_packages'), type='function', index=0)]))], created=1759717991, model='deepseek-chat', object='chat.completion', service_tier=None, system_fingerprint='fp_ffc7281d48_prod0820_fp8_kvcache', usage=CompletionUsage(completion_tokens=23, prompt_tokens=1540, total_tokens=1563, completion_tokens_details=None, prompt_tokens_details=PromptTokensDetails(audio_tokens=None, cached_tokens=1536), prompt_cache_hit_tokens=1536, prompt_cache_miss_tokens=4))
+2025-10-06 10:33:14.191 | INFO     | core.nlu.nlu_engine:_parse_response:190 - 解析响应: tool_calls数量=1
+2025-10-06 10:33:14.191 | INFO     | core.nlu.nlu_engine:_update_session:351 - [persistence_test_001] 意图切换: None -> query_packages
+2025-10-06 10:33:14.191 | INFO     | core.nlu.nlu_engine:understand:105 - [persistence_test_001] NLU完成: intent=query_packages
+2025-10-06 10:33:14.191 | INFO     | core.dst.dialog_state_tracker:track:40 - [DST] 开始跟踪会话: persistence_test_001
+2025-10-06 10:33:14.192 | DEBUG    | core.dst.state_store:_load_from_memory:121 - 内存中不存在会话: persistence_test_001, 返回新状态
+2025-10-06 10:33:14.192 | INFO     | core.dst.dialog_state_tracker:track:59 - 意图改变: None → query_packages
+2025-10-06 10:33:14.192 | INFO     | core.dst.slot_manager:fill_slots:61 - 不同领域，仅保留用户信息: []
+2025-10-06 10:33:14.192 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: persistence_test_001
+2025-10-06 10:33:14.192 | INFO     | core.dst.dialog_state_tracker:track:112 - [DST] 状态跟踪完成: turn=1, 需要澄清=False
+2025-10-06 10:33:14.192 | INFO     | executor.db_executor:execute_function:29 - 执行Function: query_packages, 参数: {'data_min': 50, 'sort_by': 'price_asc'}
+2025-10-06 10:33:14.198 | INFO     | executor.db_executor:execute_function:50 - Function执行成功: query_packages
+2025-10-06 10:33:14.198 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: persistence_test_001
+2025-10-06 10:33:14.198 | INFO     | core.chatbot_dst:_log_conversation:234 - [persistence_test_001] 对话完成 | 意图: query_packages | 轮次: 2 | 耗时: 2535ms
+2025-10-06 10:36:24.855 | INFO     | database.db_manager:_initialize:38 - 数据库连接初始化成功
+2025-10-06 10:36:24.856 | ERROR    | database.redis_manager:_initialize:45 - Redis连接池初始化失败: 'Settings' object has no attribute 'get'
+2025-10-06 10:36:24.931 | INFO     | core.nlu.nlu_engine:__init__:53 - ✓ NLU引擎初始化成功: DeepSeek (deepseek-chat)
+2025-10-06 10:37:24.866 | INFO     | database.db_manager:_initialize:38 - 数据库连接初始化成功
+2025-10-06 10:37:24.867 | ERROR    | database.redis_manager:_initialize:45 - Redis连接池初始化失败: 'Settings' object has no attribute 'get'
+2025-10-06 10:37:24.939 | INFO     | core.nlu.nlu_engine:__init__:53 - ✓ NLU引擎初始化成功: DeepSeek (deepseek-chat)
+2025-10-06 10:37:39.653 | ERROR    | core.dst.state_store:__init__:28 - Redis初始化失败: Redis连接池未初始化, 使用内存存储
+2025-10-06 10:37:39.655 | INFO     | core.dst.dialog_state_tracker:__init__:27 - 对话状态跟踪器初始化完成
+2025-10-06 10:37:39.655 | INFO     | executor.db_executor:__init__:16 - 数据库执行器初始化完成
+2025-10-06 10:37:39.655 | INFO     | core.chatbot_dst:__init__:23 - 第二阶段对话系统初始化完成（含DST支持）
+2025-10-06 10:48:41.879 | INFO     | database.db_manager:_initialize:38 - 数据库连接初始化成功
+2025-10-06 10:48:41.880 | ERROR    | database.redis_manager:_initialize:45 - Redis连接池初始化失败: 'Settings' object has no attribute 'get'
+2025-10-06 10:48:41.919 | INFO     | core.nlu.nlu_engine:__init__:53 - ✓ NLU引擎初始化成功: DeepSeek (deepseek-chat)
+2025-10-06 10:48:41.919 | ERROR    | core.dst.state_store:__init__:28 - Redis初始化失败: Redis连接池未初始化, 使用内存存储
+2025-10-06 10:48:41.919 | INFO     | core.dst.dialog_state_tracker:__init__:27 - 对话状态跟踪器初始化完成
+2025-10-06 10:48:41.919 | INFO     | executor.db_executor:__init__:16 - 数据库执行器初始化完成
+2025-10-06 10:48:41.919 | INFO     | core.chatbot_dst:__init__:23 - 第二阶段对话系统初始化完成（含DST支持）
+2025-10-06 10:48:41.919 | INFO     | core.chatbot_dst:chat:46 - [persistence_test_001] 收到用户输入: 有100元以内的套餐吗
+2025-10-06 10:48:41.919 | INFO     | core.nlu.nlu_engine:understand:73 - [persistence_test_001] 开始NLU理解: 有100元以内的套餐吗
+2025-10-06 10:48:41.919 | DEBUG    | core.nlu.nlu_engine:understand:78 - [persistence_test_001] 预处理后: 有100元以内的套餐吗
+2025-10-06 10:48:41.919 | DEBUG    | core.nlu.nlu_engine:_build_messages:162 - 构建的消息: ['system: 你是一个专业的电信客服助手,负责帮助用户查询和办理流量套餐业...', 'user: 有100元以内的套餐吗...']
+2025-10-06 10:48:41.919 | INFO     | core.nlu.nlu_engine:understand:87 - 请求模型message=[{'role': 'system', 'content': '你是一个专业的电信客服助手,负责帮助用户查询和办理流量套餐业务。\n\n【⭐⭐⭐ 最重要原则】\n- **只处理用户的最后一条消息**，忽略之前的所有用户消息\n- 如果看到多个用户消息，只响应最后一个\n- 每次只调用一个与最后一条用户消息相关的函数\n\n【你的职责】\n1. 理解用户的自然语言需求\n2. **必须**识别用户意图并调用相应的函数，不要进行闲聊\n3. 当信息不完整时,友好地向用户确认缺失的信息\n4. 用专业但亲切的语气与用户交流\n\n【当前可用套餐】\n- 经济套餐: 10G/月, 50元/月, 无限制人群\n- 畅游套餐: 100G/月, 180元/月, 无限制人群\n- 无限套餐: 1000G/月, 300元/月, 无限制人群\n- 校园套餐: 200G/月, 150元/月, 在校生专享\n\n【意图识别规则】\n1. 套餐查询类（query_packages）:\n   - "有什么套餐"、"推荐套餐"、"便宜的套餐"、"100元以内的套餐"\n   - 关键词：套餐、推荐、查询、有什么、价格、便宜\n\n2. 当前套餐查询（query_current_package）:\n   - "我的套餐"、"当前套餐"、"我用的什么套餐"\n   - 关键词：我的、当前、现在的\n\n3. 使用情况查询（query_usage）:  \n   - "用了多少流量"、"剩余流量"、"话费余额"、"查询余量"、"流量使用情况"\n   - 关键词：用了、剩余、余额、余量、流量使用、使用情况\n\n4. 套餐办理（change_package）:\n   - "办理XX套餐"、"换成XX套餐"、"我要办理"\n   - 关键词：办理、更换、变更\n\n【函数调用决策】\n重要：如果对话历史中有多个用户消息，只根据最后一条用户消息来判断意图！\n1. 识别**最后一条用户消息**的关键词\n2. 匹配最相关的单一函数\n3. 只调用该函数\n4. 忽略之前的用户消息\n\n【理解规则】\n- 价格表达要准确理解: "100块以内"→price_max=100, "50元以上"→price_min=50\n- "便宜点的"、"经济实惠"等模糊表达→sort_by="price_asc"\n- "学生套餐"、"校园"→target_user="在校生"\n- 如果用户没有提供手机号,需要礼貌询问，不要从function definitions的description中提取信息当作用户输入的。比如手机号\n\n【重要】\n- **只响应最后一条用户消息**\n- **一次只调用一个函数**\n- 不要试图同时处理多个问题\n- 回答要简洁明了\n'}, {'role': 'user', 'content': '有100元以内的套餐吗'}]
+2025-10-06 10:48:45.212 | INFO     | core.nlu.nlu_engine:_parse_response:189 - 解析响应=ChatCompletion(id='be115f23-f97f-4a7f-b4da-fd0487efe1f5', choices=[Choice(finish_reason='tool_calls', index=0, logprobs=None, message=ChatCompletionMessage(content='', refusal=None, role='assistant', annotations=None, audio=None, function_call=None, tool_calls=[ChatCompletionMessageFunctionToolCall(id='call_00_fJBEbdWQJT7wkCHsiLOTDKw7', function=Function(arguments='{"price_max": 100, "sort_by": "price_asc"}', name='query_packages'), type='function', index=0)]))], created=1759718922, model='deepseek-chat', object='chat.completion', service_tier=None, system_fingerprint='fp_ffc7281d48_prod0820_fp8_kvcache', usage=CompletionUsage(completion_tokens=23, prompt_tokens=1541, total_tokens=1564, completion_tokens_details=None, prompt_tokens_details=PromptTokensDetails(audio_tokens=None, cached_tokens=1536), prompt_cache_hit_tokens=1536, prompt_cache_miss_tokens=5))
+2025-10-06 10:48:45.212 | INFO     | core.nlu.nlu_engine:_parse_response:190 - 解析响应: tool_calls数量=1
+2025-10-06 10:48:45.213 | INFO     | core.nlu.nlu_engine:_update_session:351 - [persistence_test_001] 意图切换: None -> query_packages
+2025-10-06 10:48:45.213 | INFO     | core.nlu.nlu_engine:understand:105 - [persistence_test_001] NLU完成: intent=query_packages
+2025-10-06 10:48:45.215 | INFO     | core.dst.dialog_state_tracker:track:40 - [DST] 开始跟踪会话: persistence_test_001
+2025-10-06 10:48:45.215 | DEBUG    | core.dst.state_store:_load_from_memory:121 - 内存中不存在会话: persistence_test_001, 返回新状态
+2025-10-06 10:48:45.216 | INFO     | core.dst.dialog_state_tracker:track:59 - 意图改变: None → query_packages
+2025-10-06 10:48:45.216 | INFO     | core.dst.slot_manager:fill_slots:61 - 不同领域，仅保留用户信息: []
+2025-10-06 10:48:45.216 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: persistence_test_001
+2025-10-06 10:48:45.216 | INFO     | core.dst.dialog_state_tracker:track:112 - [DST] 状态跟踪完成: turn=1, 需要澄清=False
+2025-10-06 10:48:45.216 | INFO     | executor.db_executor:execute_function:29 - 执行Function: query_packages, 参数: {'price_max': 100, 'sort_by': 'price_asc'}
+2025-10-06 10:48:45.348 | INFO     | executor.db_executor:execute_function:50 - Function执行成功: query_packages
+2025-10-06 10:48:45.350 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: persistence_test_001
+2025-10-06 10:48:45.350 | INFO     | core.chatbot_dst:_log_conversation:234 - [persistence_test_001] 对话完成 | 意图: query_packages | 轮次: 2 | 耗时: 3431ms
+2025-10-06 10:48:45.383 | INFO     | core.nlu.nlu_engine:__init__:53 - ✓ NLU引擎初始化成功: DeepSeek (deepseek-chat)
+2025-10-06 10:48:45.383 | ERROR    | core.dst.state_store:__init__:28 - Redis初始化失败: Redis连接池未初始化, 使用内存存储
+2025-10-06 10:48:45.383 | INFO     | core.dst.dialog_state_tracker:__init__:27 - 对话状态跟踪器初始化完成
+2025-10-06 10:48:45.383 | INFO     | executor.db_executor:__init__:16 - 数据库执行器初始化完成
+2025-10-06 10:48:45.383 | INFO     | core.chatbot_dst:__init__:23 - 第二阶段对话系统初始化完成（含DST支持）
+2025-10-06 10:48:45.383 | INFO     | core.chatbot_dst:chat:46 - [persistence_test_001] 收到用户输入: 流量要50G以上
+2025-10-06 10:48:45.383 | INFO     | core.nlu.nlu_engine:understand:73 - [persistence_test_001] 开始NLU理解: 流量要50G以上
+2025-10-06 10:48:45.383 | DEBUG    | core.nlu.nlu_engine:understand:78 - [persistence_test_001] 预处理后: 流量要50G以上
+2025-10-06 10:48:45.383 | DEBUG    | core.nlu.nlu_engine:_build_messages:162 - 构建的消息: ['system: 你是一个专业的电信客服助手,负责帮助用户查询和办理流量套餐业...', 'user: 流量要50G以上...']
+2025-10-06 10:48:45.383 | INFO     | core.nlu.nlu_engine:understand:87 - 请求模型message=[{'role': 'system', 'content': '你是一个专业的电信客服助手,负责帮助用户查询和办理流量套餐业务。\n\n【⭐⭐⭐ 最重要原则】\n- **只处理用户的最后一条消息**，忽略之前的所有用户消息\n- 如果看到多个用户消息，只响应最后一个\n- 每次只调用一个与最后一条用户消息相关的函数\n\n【你的职责】\n1. 理解用户的自然语言需求\n2. **必须**识别用户意图并调用相应的函数，不要进行闲聊\n3. 当信息不完整时,友好地向用户确认缺失的信息\n4. 用专业但亲切的语气与用户交流\n\n【当前可用套餐】\n- 经济套餐: 10G/月, 50元/月, 无限制人群\n- 畅游套餐: 100G/月, 180元/月, 无限制人群\n- 无限套餐: 1000G/月, 300元/月, 无限制人群\n- 校园套餐: 200G/月, 150元/月, 在校生专享\n\n【意图识别规则】\n1. 套餐查询类（query_packages）:\n   - "有什么套餐"、"推荐套餐"、"便宜的套餐"、"100元以内的套餐"\n   - 关键词：套餐、推荐、查询、有什么、价格、便宜\n\n2. 当前套餐查询（query_current_package）:\n   - "我的套餐"、"当前套餐"、"我用的什么套餐"\n   - 关键词：我的、当前、现在的\n\n3. 使用情况查询（query_usage）:  \n   - "用了多少流量"、"剩余流量"、"话费余额"、"查询余量"、"流量使用情况"\n   - 关键词：用了、剩余、余额、余量、流量使用、使用情况\n\n4. 套餐办理（change_package）:\n   - "办理XX套餐"、"换成XX套餐"、"我要办理"\n   - 关键词：办理、更换、变更\n\n【函数调用决策】\n重要：如果对话历史中有多个用户消息，只根据最后一条用户消息来判断意图！\n1. 识别**最后一条用户消息**的关键词\n2. 匹配最相关的单一函数\n3. 只调用该函数\n4. 忽略之前的用户消息\n\n【理解规则】\n- 价格表达要准确理解: "100块以内"→price_max=100, "50元以上"→price_min=50\n- "便宜点的"、"经济实惠"等模糊表达→sort_by="price_asc"\n- "学生套餐"、"校园"→target_user="在校生"\n- 如果用户没有提供手机号,需要礼貌询问，不要从function definitions的description中提取信息当作用户输入的。比如手机号\n\n【重要】\n- **只响应最后一条用户消息**\n- **一次只调用一个函数**\n- 不要试图同时处理多个问题\n- 回答要简洁明了\n'}, {'role': 'user', 'content': '流量要50G以上'}]
+2025-10-06 10:48:47.671 | INFO     | core.nlu.nlu_engine:_parse_response:189 - 解析响应=ChatCompletion(id='5c32fbf6-c75b-4e9d-b8b9-3614a03b8997', choices=[Choice(finish_reason='tool_calls', index=0, logprobs=None, message=ChatCompletionMessage(content='', refusal=None, role='assistant', annotations=None, audio=None, function_call=None, tool_calls=[ChatCompletionMessageFunctionToolCall(id='call_00_y8I0F39dX5XnfzlcnbMLufWn', function=Function(arguments='{"data_min": 50, "sort_by": "price_asc"}', name='query_packages'), type='function', index=0)]))], created=1759718925, model='deepseek-chat', object='chat.completion', service_tier=None, system_fingerprint='fp_ffc7281d48_prod0820_fp8_kvcache', usage=CompletionUsage(completion_tokens=23, prompt_tokens=1540, total_tokens=1563, completion_tokens_details=None, prompt_tokens_details=PromptTokensDetails(audio_tokens=None, cached_tokens=1536), prompt_cache_hit_tokens=1536, prompt_cache_miss_tokens=4))
+2025-10-06 10:48:47.671 | INFO     | core.nlu.nlu_engine:_parse_response:190 - 解析响应: tool_calls数量=1
+2025-10-06 10:48:47.671 | INFO     | core.nlu.nlu_engine:_update_session:351 - [persistence_test_001] 意图切换: None -> query_packages
+2025-10-06 10:48:47.671 | INFO     | core.nlu.nlu_engine:understand:105 - [persistence_test_001] NLU完成: intent=query_packages
+2025-10-06 10:48:47.671 | INFO     | core.dst.dialog_state_tracker:track:40 - [DST] 开始跟踪会话: persistence_test_001
+2025-10-06 10:48:47.671 | DEBUG    | core.dst.state_store:_load_from_memory:121 - 内存中不存在会话: persistence_test_001, 返回新状态
+2025-10-06 10:48:47.671 | INFO     | core.dst.dialog_state_tracker:track:59 - 意图改变: None → query_packages
+2025-10-06 10:48:47.671 | INFO     | core.dst.slot_manager:fill_slots:61 - 不同领域，仅保留用户信息: []
+2025-10-06 10:48:47.671 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: persistence_test_001
+2025-10-06 10:48:47.671 | INFO     | core.dst.dialog_state_tracker:track:112 - [DST] 状态跟踪完成: turn=1, 需要澄清=False
+2025-10-06 10:48:47.672 | INFO     | executor.db_executor:execute_function:29 - 执行Function: query_packages, 参数: {'data_min': 50, 'sort_by': 'price_asc'}
+2025-10-06 10:48:47.678 | INFO     | executor.db_executor:execute_function:50 - Function执行成功: query_packages
+2025-10-06 10:48:47.678 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: persistence_test_001
+2025-10-06 10:48:47.678 | INFO     | core.chatbot_dst:_log_conversation:234 - [persistence_test_001] 对话完成 | 意图: query_packages | 轮次: 2 | 耗时: 2295ms
+2025-10-06 10:53:44.230 | INFO     | database.db_manager:_initialize:38 - 数据库连接初始化成功
+2025-10-06 10:53:44.230 | INFO     | database.redis_manager:_initialize:25 - 尝试连接Redis: localhost:6379 DB:0
+2025-10-06 10:53:44.230 | ERROR    | database.redis_manager:_initialize:46 - Redis连接池初始化失败: 'Settings' object has no attribute 'get'
+2025-10-06 10:53:44.272 | INFO     | core.nlu.nlu_engine:__init__:53 - ✓ NLU引擎初始化成功: DeepSeek (deepseek-chat)
+2025-10-06 10:53:44.272 | ERROR    | core.dst.state_store:__init__:28 - Redis初始化失败: Redis连接池未初始化, 使用内存存储
+2025-10-06 10:53:44.273 | INFO     | core.dst.dialog_state_tracker:__init__:27 - 对话状态跟踪器初始化完成
+2025-10-06 10:53:44.273 | INFO     | executor.db_executor:__init__:16 - 数据库执行器初始化完成
+2025-10-06 10:53:44.273 | INFO     | core.chatbot_dst:__init__:23 - 第二阶段对话系统初始化完成（含DST支持）
+2025-10-06 10:53:44.273 | INFO     | core.chatbot_dst:chat:46 - [persistence_test_001] 收到用户输入: 有100元以内的套餐吗
+2025-10-06 10:53:44.273 | INFO     | core.nlu.nlu_engine:understand:73 - [persistence_test_001] 开始NLU理解: 有100元以内的套餐吗
+2025-10-06 10:53:44.273 | DEBUG    | core.nlu.nlu_engine:understand:78 - [persistence_test_001] 预处理后: 有100元以内的套餐吗
+2025-10-06 10:53:44.273 | DEBUG    | core.nlu.nlu_engine:_build_messages:162 - 构建的消息: ['system: 你是一个专业的电信客服助手,负责帮助用户查询和办理流量套餐业...', 'user: 有100元以内的套餐吗...']
+2025-10-06 10:53:44.273 | INFO     | core.nlu.nlu_engine:understand:87 - 请求模型message=[{'role': 'system', 'content': '你是一个专业的电信客服助手,负责帮助用户查询和办理流量套餐业务。\n\n【⭐⭐⭐ 最重要原则】\n- **只处理用户的最后一条消息**，忽略之前的所有用户消息\n- 如果看到多个用户消息，只响应最后一个\n- 每次只调用一个与最后一条用户消息相关的函数\n\n【你的职责】\n1. 理解用户的自然语言需求\n2. **必须**识别用户意图并调用相应的函数，不要进行闲聊\n3. 当信息不完整时,友好地向用户确认缺失的信息\n4. 用专业但亲切的语气与用户交流\n\n【当前可用套餐】\n- 经济套餐: 10G/月, 50元/月, 无限制人群\n- 畅游套餐: 100G/月, 180元/月, 无限制人群\n- 无限套餐: 1000G/月, 300元/月, 无限制人群\n- 校园套餐: 200G/月, 150元/月, 在校生专享\n\n【意图识别规则】\n1. 套餐查询类（query_packages）:\n   - "有什么套餐"、"推荐套餐"、"便宜的套餐"、"100元以内的套餐"\n   - 关键词：套餐、推荐、查询、有什么、价格、便宜\n\n2. 当前套餐查询（query_current_package）:\n   - "我的套餐"、"当前套餐"、"我用的什么套餐"\n   - 关键词：我的、当前、现在的\n\n3. 使用情况查询（query_usage）:  \n   - "用了多少流量"、"剩余流量"、"话费余额"、"查询余量"、"流量使用情况"\n   - 关键词：用了、剩余、余额、余量、流量使用、使用情况\n\n4. 套餐办理（change_package）:\n   - "办理XX套餐"、"换成XX套餐"、"我要办理"\n   - 关键词：办理、更换、变更\n\n【函数调用决策】\n重要：如果对话历史中有多个用户消息，只根据最后一条用户消息来判断意图！\n1. 识别**最后一条用户消息**的关键词\n2. 匹配最相关的单一函数\n3. 只调用该函数\n4. 忽略之前的用户消息\n\n【理解规则】\n- 价格表达要准确理解: "100块以内"→price_max=100, "50元以上"→price_min=50\n- "便宜点的"、"经济实惠"等模糊表达→sort_by="price_asc"\n- "学生套餐"、"校园"→target_user="在校生"\n- 如果用户没有提供手机号,需要礼貌询问，不要从function definitions的description中提取信息当作用户输入的。比如手机号\n\n【重要】\n- **只响应最后一条用户消息**\n- **一次只调用一个函数**\n- 不要试图同时处理多个问题\n- 回答要简洁明了\n'}, {'role': 'user', 'content': '有100元以内的套餐吗'}]
+2025-10-06 10:53:46.868 | INFO     | core.nlu.nlu_engine:_parse_response:189 - 解析响应=ChatCompletion(id='f1a16d1a-f89c-409c-b048-87caa64ef784', choices=[Choice(finish_reason='tool_calls', index=0, logprobs=None, message=ChatCompletionMessage(content='', refusal=None, role='assistant', annotations=None, audio=None, function_call=None, tool_calls=[ChatCompletionMessageFunctionToolCall(id='call_00_CRgQ2Mj53eNZZvOgrjzkieMh', function=Function(arguments='{"price_max": 100, "sort_by": "price_asc"}', name='query_packages'), type='function', index=0)]))], created=1759719224, model='deepseek-chat', object='chat.completion', service_tier=None, system_fingerprint='fp_ffc7281d48_prod0820_fp8_kvcache', usage=CompletionUsage(completion_tokens=23, prompt_tokens=1541, total_tokens=1564, completion_tokens_details=None, prompt_tokens_details=PromptTokensDetails(audio_tokens=None, cached_tokens=1536), prompt_cache_hit_tokens=1536, prompt_cache_miss_tokens=5))
+2025-10-06 10:53:46.869 | INFO     | core.nlu.nlu_engine:_parse_response:190 - 解析响应: tool_calls数量=1
+2025-10-06 10:53:46.869 | INFO     | core.nlu.nlu_engine:_update_session:351 - [persistence_test_001] 意图切换: None -> query_packages
+2025-10-06 10:53:46.869 | INFO     | core.nlu.nlu_engine:understand:105 - [persistence_test_001] NLU完成: intent=query_packages
+2025-10-06 10:53:46.869 | INFO     | core.dst.dialog_state_tracker:track:40 - [DST] 开始跟踪会话: persistence_test_001
+2025-10-06 10:53:46.869 | DEBUG    | core.dst.state_store:_load_from_memory:121 - 内存中不存在会话: persistence_test_001, 返回新状态
+2025-10-06 10:53:46.869 | INFO     | core.dst.dialog_state_tracker:track:59 - 意图改变: None → query_packages
+2025-10-06 10:53:46.869 | INFO     | core.dst.slot_manager:fill_slots:61 - 不同领域，仅保留用户信息: []
+2025-10-06 10:53:46.870 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: persistence_test_001
+2025-10-06 10:53:46.870 | INFO     | core.dst.dialog_state_tracker:track:112 - [DST] 状态跟踪完成: turn=1, 需要澄清=False
+2025-10-06 10:53:46.870 | INFO     | executor.db_executor:execute_function:29 - 执行Function: query_packages, 参数: {'price_max': 100, 'sort_by': 'price_asc'}
+2025-10-06 10:53:46.946 | INFO     | executor.db_executor:execute_function:50 - Function执行成功: query_packages
+2025-10-06 10:53:46.946 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: persistence_test_001
+2025-10-06 10:53:46.947 | INFO     | core.chatbot_dst:_log_conversation:234 - [persistence_test_001] 对话完成 | 意图: query_packages | 轮次: 2 | 耗时: 2674ms
+2025-10-06 10:53:46.973 | INFO     | core.nlu.nlu_engine:__init__:53 - ✓ NLU引擎初始化成功: DeepSeek (deepseek-chat)
+2025-10-06 10:53:46.974 | ERROR    | core.dst.state_store:__init__:28 - Redis初始化失败: Redis连接池未初始化, 使用内存存储
+2025-10-06 10:53:46.974 | INFO     | core.dst.dialog_state_tracker:__init__:27 - 对话状态跟踪器初始化完成
+2025-10-06 10:53:46.974 | INFO     | executor.db_executor:__init__:16 - 数据库执行器初始化完成
+2025-10-06 10:53:46.974 | INFO     | core.chatbot_dst:__init__:23 - 第二阶段对话系统初始化完成（含DST支持）
+2025-10-06 10:53:46.974 | INFO     | core.chatbot_dst:chat:46 - [persistence_test_001] 收到用户输入: 流量要50G以上
+2025-10-06 10:53:46.974 | INFO     | core.nlu.nlu_engine:understand:73 - [persistence_test_001] 开始NLU理解: 流量要50G以上
+2025-10-06 10:53:46.974 | DEBUG    | core.nlu.nlu_engine:understand:78 - [persistence_test_001] 预处理后: 流量要50G以上
+2025-10-06 10:53:46.974 | DEBUG    | core.nlu.nlu_engine:_build_messages:162 - 构建的消息: ['system: 你是一个专业的电信客服助手,负责帮助用户查询和办理流量套餐业...', 'user: 流量要50G以上...']
+2025-10-06 10:53:46.974 | INFO     | core.nlu.nlu_engine:understand:87 - 请求模型message=[{'role': 'system', 'content': '你是一个专业的电信客服助手,负责帮助用户查询和办理流量套餐业务。\n\n【⭐⭐⭐ 最重要原则】\n- **只处理用户的最后一条消息**，忽略之前的所有用户消息\n- 如果看到多个用户消息，只响应最后一个\n- 每次只调用一个与最后一条用户消息相关的函数\n\n【你的职责】\n1. 理解用户的自然语言需求\n2. **必须**识别用户意图并调用相应的函数，不要进行闲聊\n3. 当信息不完整时,友好地向用户确认缺失的信息\n4. 用专业但亲切的语气与用户交流\n\n【当前可用套餐】\n- 经济套餐: 10G/月, 50元/月, 无限制人群\n- 畅游套餐: 100G/月, 180元/月, 无限制人群\n- 无限套餐: 1000G/月, 300元/月, 无限制人群\n- 校园套餐: 200G/月, 150元/月, 在校生专享\n\n【意图识别规则】\n1. 套餐查询类（query_packages）:\n   - "有什么套餐"、"推荐套餐"、"便宜的套餐"、"100元以内的套餐"\n   - 关键词：套餐、推荐、查询、有什么、价格、便宜\n\n2. 当前套餐查询（query_current_package）:\n   - "我的套餐"、"当前套餐"、"我用的什么套餐"\n   - 关键词：我的、当前、现在的\n\n3. 使用情况查询（query_usage）:  \n   - "用了多少流量"、"剩余流量"、"话费余额"、"查询余量"、"流量使用情况"\n   - 关键词：用了、剩余、余额、余量、流量使用、使用情况\n\n4. 套餐办理（change_package）:\n   - "办理XX套餐"、"换成XX套餐"、"我要办理"\n   - 关键词：办理、更换、变更\n\n【函数调用决策】\n重要：如果对话历史中有多个用户消息，只根据最后一条用户消息来判断意图！\n1. 识别**最后一条用户消息**的关键词\n2. 匹配最相关的单一函数\n3. 只调用该函数\n4. 忽略之前的用户消息\n\n【理解规则】\n- 价格表达要准确理解: "100块以内"→price_max=100, "50元以上"→price_min=50\n- "便宜点的"、"经济实惠"等模糊表达→sort_by="price_asc"\n- "学生套餐"、"校园"→target_user="在校生"\n- 如果用户没有提供手机号,需要礼貌询问，不要从function definitions的description中提取信息当作用户输入的。比如手机号\n\n【重要】\n- **只响应最后一条用户消息**\n- **一次只调用一个函数**\n- 不要试图同时处理多个问题\n- 回答要简洁明了\n'}, {'role': 'user', 'content': '流量要50G以上'}]
+2025-10-06 10:53:49.227 | INFO     | core.nlu.nlu_engine:_parse_response:189 - 解析响应=ChatCompletion(id='251edd3f-9984-4808-a51f-1d8420189e7b', choices=[Choice(finish_reason='tool_calls', index=0, logprobs=None, message=ChatCompletionMessage(content='', refusal=None, role='assistant', annotations=None, audio=None, function_call=None, tool_calls=[ChatCompletionMessageFunctionToolCall(id='call_00_FJqSfWzrligSv9eSrj8QoiuU', function=Function(arguments='{"data_min": 50, "sort_by": "price_asc"}', name='query_packages'), type='function', index=0)]))], created=1759719227, model='deepseek-chat', object='chat.completion', service_tier=None, system_fingerprint='fp_ffc7281d48_prod0820_fp8_kvcache', usage=CompletionUsage(completion_tokens=23, prompt_tokens=1540, total_tokens=1563, completion_tokens_details=None, prompt_tokens_details=PromptTokensDetails(audio_tokens=None, cached_tokens=1536), prompt_cache_hit_tokens=1536, prompt_cache_miss_tokens=4))
+2025-10-06 10:53:49.227 | INFO     | core.nlu.nlu_engine:_parse_response:190 - 解析响应: tool_calls数量=1
+2025-10-06 10:53:49.227 | INFO     | core.nlu.nlu_engine:_update_session:351 - [persistence_test_001] 意图切换: None -> query_packages
+2025-10-06 10:53:49.227 | INFO     | core.nlu.nlu_engine:understand:105 - [persistence_test_001] NLU完成: intent=query_packages
+2025-10-06 10:53:49.227 | INFO     | core.dst.dialog_state_tracker:track:40 - [DST] 开始跟踪会话: persistence_test_001
+2025-10-06 10:53:49.228 | DEBUG    | core.dst.state_store:_load_from_memory:121 - 内存中不存在会话: persistence_test_001, 返回新状态
+2025-10-06 10:53:49.228 | INFO     | core.dst.dialog_state_tracker:track:59 - 意图改变: None → query_packages
+2025-10-06 10:53:49.228 | INFO     | core.dst.slot_manager:fill_slots:61 - 不同领域，仅保留用户信息: []
+2025-10-06 10:53:49.228 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: persistence_test_001
+2025-10-06 10:53:49.228 | INFO     | core.dst.dialog_state_tracker:track:112 - [DST] 状态跟踪完成: turn=1, 需要澄清=False
+2025-10-06 10:53:49.228 | INFO     | executor.db_executor:execute_function:29 - 执行Function: query_packages, 参数: {'data_min': 50, 'sort_by': 'price_asc'}
+2025-10-06 10:53:49.231 | INFO     | executor.db_executor:execute_function:50 - Function执行成功: query_packages
+2025-10-06 10:53:49.231 | DEBUG    | core.dst.state_store:_save_to_memory:78 - 状态已保存到内存: persistence_test_001
+2025-10-06 10:53:49.231 | INFO     | core.chatbot_dst:_log_conversation:234 - [persistence_test_001] 对话完成 | 意图: query_packages | 轮次: 2 | 耗时: 2257ms
+2025-10-06 10:54:35.771 | INFO     | database.db_manager:_initialize:38 - 数据库连接初始化成功
+2025-10-06 10:54:40.108 | INFO     | database.redis_manager:_initialize:25 - 尝试连接Redis: localhost:6379 DB:0
+2025-10-06 10:59:09.370 | INFO     | database.db_manager:_initialize:38 - 数据库连接初始化成功
+2025-10-06 10:59:09.371 | INFO     | database.redis_manager:_initialize:25 - 尝试连接Redis: localhost:6379 DB:0
+2025-10-06 10:59:09.371 | INFO     | database.redis_manager:_initialize:44 - Redis连接池初始化成功: localhost:6379
+2025-10-06 10:59:09.417 | INFO     | core.nlu.nlu_engine:__init__:53 - ✓ NLU引擎初始化成功: DeepSeek (deepseek-chat)
+2025-10-06 10:59:09.419 | INFO     | database.redis_manager:test_connection:60 - Redis连接测试成功
+2025-10-06 10:59:09.419 | INFO     | core.dst.dialog_state_tracker:__init__:27 - 对话状态跟踪器初始化完成
+2025-10-06 10:59:09.419 | INFO     | executor.db_executor:__init__:16 - 数据库执行器初始化完成
+2025-10-06 10:59:09.419 | INFO     | core.chatbot_dst:__init__:23 - 第二阶段对话系统初始化完成（含DST支持）
+2025-10-06 10:59:09.420 | INFO     | core.chatbot_dst:chat:46 - [persistence_test_001] 收到用户输入: 有100元以内的套餐吗
+2025-10-06 10:59:09.420 | INFO     | core.nlu.nlu_engine:understand:73 - [persistence_test_001] 开始NLU理解: 有100元以内的套餐吗
+2025-10-06 10:59:09.420 | DEBUG    | core.nlu.nlu_engine:understand:78 - [persistence_test_001] 预处理后: 有100元以内的套餐吗
+2025-10-06 10:59:09.420 | DEBUG    | core.nlu.nlu_engine:_build_messages:162 - 构建的消息: ['system: 你是一个专业的电信客服助手,负责帮助用户查询和办理流量套餐业...', 'user: 有100元以内的套餐吗...']
+2025-10-06 10:59:09.420 | INFO     | core.nlu.nlu_engine:understand:87 - 请求模型message=[{'role': 'system', 'content': '你是一个专业的电信客服助手,负责帮助用户查询和办理流量套餐业务。\n\n【⭐⭐⭐ 最重要原则】\n- **只处理用户的最后一条消息**，忽略之前的所有用户消息\n- 如果看到多个用户消息，只响应最后一个\n- 每次只调用一个与最后一条用户消息相关的函数\n\n【你的职责】\n1. 理解用户的自然语言需求\n2. **必须**识别用户意图并调用相应的函数，不要进行闲聊\n3. 当信息不完整时,友好地向用户确认缺失的信息\n4. 用专业但亲切的语气与用户交流\n\n【当前可用套餐】\n- 经济套餐: 10G/月, 50元/月, 无限制人群\n- 畅游套餐: 100G/月, 180元/月, 无限制人群\n- 无限套餐: 1000G/月, 300元/月, 无限制人群\n- 校园套餐: 200G/月, 150元/月, 在校生专享\n\n【意图识别规则】\n1. 套餐查询类（query_packages）:\n   - "有什么套餐"、"推荐套餐"、"便宜的套餐"、"100元以内的套餐"\n   - 关键词：套餐、推荐、查询、有什么、价格、便宜\n\n2. 当前套餐查询（query_current_package）:\n   - "我的套餐"、"当前套餐"、"我用的什么套餐"\n   - 关键词：我的、当前、现在的\n\n3. 使用情况查询（query_usage）:  \n   - "用了多少流量"、"剩余流量"、"话费余额"、"查询余量"、"流量使用情况"\n   - 关键词：用了、剩余、余额、余量、流量使用、使用情况\n\n4. 套餐办理（change_package）:\n   - "办理XX套餐"、"换成XX套餐"、"我要办理"\n   - 关键词：办理、更换、变更\n\n【函数调用决策】\n重要：如果对话历史中有多个用户消息，只根据最后一条用户消息来判断意图！\n1. 识别**最后一条用户消息**的关键词\n2. 匹配最相关的单一函数\n3. 只调用该函数\n4. 忽略之前的用户消息\n\n【理解规则】\n- 价格表达要准确理解: "100块以内"→price_max=100, "50元以上"→price_min=50\n- "便宜点的"、"经济实惠"等模糊表达→sort_by="price_asc"\n- "学生套餐"、"校园"→target_user="在校生"\n- 如果用户没有提供手机号,需要礼貌询问，不要从function definitions的description中提取信息当作用户输入的。比如手机号\n\n【重要】\n- **只响应最后一条用户消息**\n- **一次只调用一个函数**\n- 不要试图同时处理多个问题\n- 回答要简洁明了\n'}, {'role': 'user', 'content': '有100元以内的套餐吗'}]
+2025-10-06 10:59:12.706 | INFO     | core.nlu.nlu_engine:_parse_response:189 - 解析响应=ChatCompletion(id='919390bc-11d7-4438-a26a-fb5131f99858', choices=[Choice(finish_reason='tool_calls', index=0, logprobs=None, message=ChatCompletionMessage(content='', refusal=None, role='assistant', annotations=None, audio=None, function_call=None, tool_calls=[ChatCompletionMessageFunctionToolCall(id='call_00_wGLUZbKbzMT3w3uCfF7vjcaX', function=Function(arguments='{"price_max": 100}', name='query_packages'), type='function', index=0)]))], created=1759719549, model='deepseek-chat', object='chat.completion', service_tier=None, system_fingerprint='fp_ffc7281d48_prod0820_fp8_kvcache', usage=CompletionUsage(completion_tokens=14, prompt_tokens=1541, total_tokens=1555, completion_tokens_details=None, prompt_tokens_details=PromptTokensDetails(audio_tokens=None, cached_tokens=1536), prompt_cache_hit_tokens=1536, prompt_cache_miss_tokens=5))
+2025-10-06 10:59:12.707 | INFO     | core.nlu.nlu_engine:_parse_response:190 - 解析响应: tool_calls数量=1
+2025-10-06 10:59:12.707 | INFO     | core.nlu.nlu_engine:_update_session:351 - [persistence_test_001] 意图切换: None -> query_packages
+2025-10-06 10:59:12.707 | INFO     | core.nlu.nlu_engine:understand:105 - [persistence_test_001] NLU完成: intent=query_packages
+2025-10-06 10:59:12.707 | INFO     | core.dst.dialog_state_tracker:track:40 - [DST] 开始跟踪会话: persistence_test_001
+2025-10-06 10:59:12.709 | DEBUG    | core.dst.state_store:_load_from_redis:105 - Redis中不存在会话: persistence_test_001, 返回新状态
+2025-10-06 10:59:12.709 | INFO     | core.dst.dialog_state_tracker:track:59 - 意图改变: None → query_packages
+2025-10-06 10:59:12.709 | INFO     | core.dst.slot_manager:fill_slots:61 - 不同领域，仅保留用户信息: []
+2025-10-06 10:59:12.710 | DEBUG    | core.dst.state_store:_save_to_redis:73 - 状态已保存到Redis: persistence_test_001
+2025-10-06 10:59:12.710 | INFO     | core.dst.dialog_state_tracker:track:112 - [DST] 状态跟踪完成: turn=1, 需要澄清=False
+2025-10-06 10:59:12.710 | INFO     | executor.db_executor:execute_function:29 - 执行Function: query_packages, 参数: {'price_max': 100}
+2025-10-06 10:59:12.773 | INFO     | executor.db_executor:execute_function:50 - Function执行成功: query_packages
+2025-10-06 10:59:12.774 | DEBUG    | core.dst.state_store:_save_to_redis:73 - 状态已保存到Redis: persistence_test_001
+2025-10-06 10:59:12.775 | INFO     | core.chatbot_dst:_log_conversation:234 - [persistence_test_001] 对话完成 | 意图: query_packages | 轮次: 2 | 耗时: 3355ms
+2025-10-06 10:59:12.802 | INFO     | core.nlu.nlu_engine:__init__:53 - ✓ NLU引擎初始化成功: DeepSeek (deepseek-chat)
+2025-10-06 10:59:12.802 | INFO     | database.redis_manager:test_connection:60 - Redis连接测试成功
+2025-10-06 10:59:12.802 | INFO     | core.dst.dialog_state_tracker:__init__:27 - 对话状态跟踪器初始化完成
+2025-10-06 10:59:12.803 | INFO     | executor.db_executor:__init__:16 - 数据库执行器初始化完成
+2025-10-06 10:59:12.803 | INFO     | core.chatbot_dst:__init__:23 - 第二阶段对话系统初始化完成（含DST支持）
+2025-10-06 10:59:12.803 | INFO     | core.chatbot_dst:chat:46 - [persistence_test_001] 收到用户输入: 流量要50G以上
+2025-10-06 10:59:12.803 | INFO     | core.nlu.nlu_engine:understand:73 - [persistence_test_001] 开始NLU理解: 流量要50G以上
+2025-10-06 10:59:12.803 | DEBUG    | core.nlu.nlu_engine:understand:78 - [persistence_test_001] 预处理后: 流量要50G以上
+2025-10-06 10:59:12.803 | DEBUG    | core.nlu.nlu_engine:_build_messages:162 - 构建的消息: ['system: 你是一个专业的电信客服助手,负责帮助用户查询和办理流量套餐业...', 'user: 流量要50G以上...']
+2025-10-06 10:59:12.803 | INFO     | core.nlu.nlu_engine:understand:87 - 请求模型message=[{'role': 'system', 'content': '你是一个专业的电信客服助手,负责帮助用户查询和办理流量套餐业务。\n\n【⭐⭐⭐ 最重要原则】\n- **只处理用户的最后一条消息**，忽略之前的所有用户消息\n- 如果看到多个用户消息，只响应最后一个\n- 每次只调用一个与最后一条用户消息相关的函数\n\n【你的职责】\n1. 理解用户的自然语言需求\n2. **必须**识别用户意图并调用相应的函数，不要进行闲聊\n3. 当信息不完整时,友好地向用户确认缺失的信息\n4. 用专业但亲切的语气与用户交流\n\n【当前可用套餐】\n- 经济套餐: 10G/月, 50元/月, 无限制人群\n- 畅游套餐: 100G/月, 180元/月, 无限制人群\n- 无限套餐: 1000G/月, 300元/月, 无限制人群\n- 校园套餐: 200G/月, 150元/月, 在校生专享\n\n【意图识别规则】\n1. 套餐查询类（query_packages）:\n   - "有什么套餐"、"推荐套餐"、"便宜的套餐"、"100元以内的套餐"\n   - 关键词：套餐、推荐、查询、有什么、价格、便宜\n\n2. 当前套餐查询（query_current_package）:\n   - "我的套餐"、"当前套餐"、"我用的什么套餐"\n   - 关键词：我的、当前、现在的\n\n3. 使用情况查询（query_usage）:  \n   - "用了多少流量"、"剩余流量"、"话费余额"、"查询余量"、"流量使用情况"\n   - 关键词：用了、剩余、余额、余量、流量使用、使用情况\n\n4. 套餐办理（change_package）:\n   - "办理XX套餐"、"换成XX套餐"、"我要办理"\n   - 关键词：办理、更换、变更\n\n【函数调用决策】\n重要：如果对话历史中有多个用户消息，只根据最后一条用户消息来判断意图！\n1. 识别**最后一条用户消息**的关键词\n2. 匹配最相关的单一函数\n3. 只调用该函数\n4. 忽略之前的用户消息\n\n【理解规则】\n- 价格表达要准确理解: "100块以内"→price_max=100, "50元以上"→price_min=50\n- "便宜点的"、"经济实惠"等模糊表达→sort_by="price_asc"\n- "学生套餐"、"校园"→target_user="在校生"\n- 如果用户没有提供手机号,需要礼貌询问，不要从function definitions的description中提取信息当作用户输入的。比如手机号\n\n【重要】\n- **只响应最后一条用户消息**\n- **一次只调用一个函数**\n- 不要试图同时处理多个问题\n- 回答要简洁明了\n'}, {'role': 'user', 'content': '流量要50G以上'}]
+2025-10-06 10:59:15.577 | INFO     | core.nlu.nlu_engine:_parse_response:189 - 解析响应=ChatCompletion(id='bdf9b12c-6bd2-4f0c-a725-424383def5ef', choices=[Choice(finish_reason='tool_calls', index=0, logprobs=None, message=ChatCompletionMessage(content='', refusal=None, role='assistant', annotations=None, audio=None, function_call=None, tool_calls=[ChatCompletionMessageFunctionToolCall(id='call_00_bXGy86O3DDljJiM9kzYl0eDz', function=Function(arguments='{"data_min": 50, "sort_by": "price_asc"}', name='query_packages'), type='function', index=0)]))], created=1759719552, model='deepseek-chat', object='chat.completion', service_tier=None, system_fingerprint='fp_ffc7281d48_prod0820_fp8_kvcache', usage=CompletionUsage(completion_tokens=23, prompt_tokens=1540, total_tokens=1563, completion_tokens_details=None, prompt_tokens_details=PromptTokensDetails(audio_tokens=None, cached_tokens=1536), prompt_cache_hit_tokens=1536, prompt_cache_miss_tokens=4))
+2025-10-06 10:59:15.578 | INFO     | core.nlu.nlu_engine:_parse_response:190 - 解析响应: tool_calls数量=1
+2025-10-06 10:59:15.578 | INFO     | core.nlu.nlu_engine:_update_session:351 - [persistence_test_001] 意图切换: None -> query_packages
+2025-10-06 10:59:15.578 | INFO     | core.nlu.nlu_engine:understand:105 - [persistence_test_001] NLU完成: intent=query_packages
+2025-10-06 10:59:15.578 | INFO     | core.dst.dialog_state_tracker:track:40 - [DST] 开始跟踪会话: persistence_test_001
+2025-10-06 10:59:15.579 | DEBUG    | core.dst.state_store:_load_from_redis:112 - 从Redis加载状态: persistence_test_001
+2025-10-06 10:59:15.579 | INFO     | core.dst.slot_manager:fill_slots:43 - 意图不变，合并槽位: ['data_min', 'sort_by']
+2025-10-06 10:59:15.580 | DEBUG    | core.dst.state_store:_save_to_redis:73 - 状态已保存到Redis: persistence_test_001
+2025-10-06 10:59:15.580 | INFO     | core.dst.dialog_state_tracker:track:112 - [DST] 状态跟踪完成: turn=3, 需要澄清=False
+2025-10-06 10:59:15.580 | INFO     | executor.db_executor:execute_function:29 - 执行Function: query_packages, 参数: {'price_max': 100, 'data_min': 50, 'sort_by': 'price_asc'}
+2025-10-06 10:59:15.585 | INFO     | executor.db_executor:execute_function:50 - Function执行成功: query_packages
+2025-10-06 10:59:15.585 | DEBUG    | core.dst.state_store:_save_to_redis:73 - 状态已保存到Redis: persistence_test_001
+2025-10-06 10:59:15.585 | INFO     | core.chatbot_dst:_log_conversation:234 - [persistence_test_001] 对话完成 | 意图: query_packages | 轮次: 4 | 耗时: 2783ms
+2025-10-06 11:00:14.684 | INFO     | database.db_manager:_initialize:38 - 数据库连接初始化成功
+2025-10-06 11:00:14.684 | INFO     | database.redis_manager:_initialize:25 - 尝试连接Redis: localhost:6379 DB:0
+2025-10-06 11:00:14.684 | INFO     | database.redis_manager:_initialize:44 - Redis连接池初始化成功: localhost:6379
+2025-10-06 11:00:14.723 | INFO     | core.nlu.nlu_engine:__init__:53 - ✓ NLU引擎初始化成功: DeepSeek (deepseek-chat)
+2025-10-06 11:00:14.725 | INFO     | database.redis_manager:test_connection:60 - Redis连接测试成功
+2025-10-06 11:00:14.725 | INFO     | core.dst.dialog_state_tracker:__init__:27 - 对话状态跟踪器初始化完成
+2025-10-06 11:00:14.725 | INFO     | executor.db_executor:__init__:16 - 数据库执行器初始化完成
+2025-10-06 11:00:14.725 | INFO     | core.chatbot_dst:__init__:23 - 第二阶段对话系统初始化完成（含DST支持）
+2025-10-06 11:00:14.725 | INFO     | core.chatbot_dst:chat:46 - [context_test_002] 收到用户输入: 我的手机号是13800138000
+2025-10-06 11:00:14.725 | INFO     | core.nlu.nlu_engine:understand:73 - [context_test_002] 开始NLU理解: 我的手机号是13800138000
+2025-10-06 11:00:14.726 | DEBUG    | core.nlu.nlu_engine:understand:78 - [context_test_002] 预处理后: 我的手机号是13800138000
+2025-10-06 11:00:14.726 | DEBUG    | core.nlu.nlu_engine:_build_messages:162 - 构建的消息: ['system: 你是一个专业的电信客服助手,负责帮助用户查询和办理流量套餐业...', 'user: 我的手机号是13800138000...']
+2025-10-06 11:00:14.726 | INFO     | core.nlu.nlu_engine:understand:87 - 请求模型message=[{'role': 'system', 'content': '你是一个专业的电信客服助手,负责帮助用户查询和办理流量套餐业务。\n\n【⭐⭐⭐ 最重要原则】\n- **只处理用户的最后一条消息**，忽略之前的所有用户消息\n- 如果看到多个用户消息，只响应最后一个\n- 每次只调用一个与最后一条用户消息相关的函数\n\n【你的职责】\n1. 理解用户的自然语言需求\n2. **必须**识别用户意图并调用相应的函数，不要进行闲聊\n3. 当信息不完整时,友好地向用户确认缺失的信息\n4. 用专业但亲切的语气与用户交流\n\n【当前可用套餐】\n- 经济套餐: 10G/月, 50元/月, 无限制人群\n- 畅游套餐: 100G/月, 180元/月, 无限制人群\n- 无限套餐: 1000G/月, 300元/月, 无限制人群\n- 校园套餐: 200G/月, 150元/月, 在校生专享\n\n【意图识别规则】\n1. 套餐查询类（query_packages）:\n   - "有什么套餐"、"推荐套餐"、"便宜的套餐"、"100元以内的套餐"\n   - 关键词：套餐、推荐、查询、有什么、价格、便宜\n\n2. 当前套餐查询（query_current_package）:\n   - "我的套餐"、"当前套餐"、"我用的什么套餐"\n   - 关键词：我的、当前、现在的\n\n3. 使用情况查询（query_usage）:  \n   - "用了多少流量"、"剩余流量"、"话费余额"、"查询余量"、"流量使用情况"\n   - 关键词：用了、剩余、余额、余量、流量使用、使用情况\n\n4. 套餐办理（change_package）:\n   - "办理XX套餐"、"换成XX套餐"、"我要办理"\n   - 关键词：办理、更换、变更\n\n【函数调用决策】\n重要：如果对话历史中有多个用户消息，只根据最后一条用户消息来判断意图！\n1. 识别**最后一条用户消息**的关键词\n2. 匹配最相关的单一函数\n3. 只调用该函数\n4. 忽略之前的用户消息\n\n【理解规则】\n- 价格表达要准确理解: "100块以内"→price_max=100, "50元以上"→price_min=50\n- "便宜点的"、"经济实惠"等模糊表达→sort_by="price_asc"\n- "学生套餐"、"校园"→target_user="在校生"\n- 如果用户没有提供手机号,需要礼貌询问，不要从function definitions的description中提取信息当作用户输入的。比如手机号\n\n【重要】\n- **只响应最后一条用户消息**\n- **一次只调用一个函数**\n- 不要试图同时处理多个问题\n- 回答要简洁明了\n'}, {'role': 'user', 'content': '我的手机号是13800138000'}]
+2025-10-06 11:00:16.933 | INFO     | core.nlu.nlu_engine:_parse_response:189 - 解析响应=ChatCompletion(id='db7a220a-8bee-48a3-804a-ea77a21fb27e', choices=[Choice(finish_reason='tool_calls', index=0, logprobs=None, message=ChatCompletionMessage(content='', refusal=None, role='assistant', annotations=None, audio=None, function_call=None, tool_calls=[ChatCompletionMessageFunctionToolCall(id='call_00_rEctqfLVnJJQzLUro0WpvlGs', function=Function(arguments='{"phone": "13800138000"}', name='query_current_package'), type='function', index=0)]))], created=1759719615, model='deepseek-chat', object='chat.completion', service_tier=None, system_fingerprint='fp_ffc7281d48_prod0820_fp8_kvcache', usage=CompletionUsage(completion_tokens=17, prompt_tokens=1543, total_tokens=1560, completion_tokens_details=None, prompt_tokens_details=PromptTokensDetails(audio_tokens=None, cached_tokens=1472), prompt_cache_hit_tokens=1472, prompt_cache_miss_tokens=71))
+2025-10-06 11:00:16.933 | INFO     | core.nlu.nlu_engine:_parse_response:190 - 解析响应: tool_calls数量=1
+2025-10-06 11:00:16.933 | INFO     | core.nlu.nlu_engine:_update_session:351 - [context_test_002] 意图切换: None -> query_current_package
+2025-10-06 11:00:16.934 | INFO     | core.nlu.nlu_engine:understand:105 - [context_test_002] NLU完成: intent=query_current_package
+2025-10-06 11:00:16.934 | INFO     | core.dst.dialog_state_tracker:track:40 - [DST] 开始跟踪会话: context_test_002
+2025-10-06 11:00:16.934 | DEBUG    | core.dst.state_store:_load_from_redis:105 - Redis中不存在会话: context_test_002, 返回新状态
+2025-10-06 11:00:16.934 | INFO     | core.dst.dialog_state_tracker:track:59 - 意图改变: None → query_current_package
+2025-10-06 11:00:16.934 | INFO     | core.dst.slot_manager:fill_slots:61 - 不同领域，仅保留用户信息: []
+2025-10-06 11:00:16.937 | DEBUG    | core.dst.state_store:_save_to_redis:73 - 状态已保存到Redis: context_test_002
+2025-10-06 11:00:16.937 | INFO     | core.dst.dialog_state_tracker:track:112 - [DST] 状态跟踪完成: turn=1, 需要澄清=False
+2025-10-06 11:00:16.938 | INFO     | executor.db_executor:execute_function:29 - 执行Function: query_current_package, 参数: {'phone': '13800138000'}
+2025-10-06 11:00:16.967 | INFO     | executor.db_executor:execute_function:50 - Function执行成功: query_current_package
+2025-10-06 11:00:16.968 | DEBUG    | core.dst.state_store:_save_to_redis:73 - 状态已保存到Redis: context_test_002
+2025-10-06 11:00:16.968 | INFO     | core.chatbot_dst:_log_conversation:234 - [context_test_002] 对话完成 | 意图: query_current_package | 轮次: 2 | 耗时: 2242ms
+2025-10-06 11:00:16.968 | INFO     | core.chatbot_dst:chat:46 - [context_test_002] 收到用户输入: 有什么套餐
+2025-10-06 11:00:16.968 | INFO     | core.nlu.nlu_engine:understand:73 - [context_test_002] 开始NLU理解: 有什么套餐
+2025-10-06 11:00:16.968 | DEBUG    | core.nlu.nlu_engine:understand:78 - [context_test_002] 预处理后: 有什么套餐
+2025-10-06 11:00:16.968 | DEBUG    | core.nlu.nlu_engine:_build_messages:162 - 构建的消息: ['system: 你是一个专业的电信客服助手,负责帮助用户查询和办理流量套餐业...', 'assistant: 正在查询您的当前套餐...', 'user: 有什么套餐...']
+2025-10-06 11:00:16.968 | INFO     | core.nlu.nlu_engine:understand:87 - 请求模型message=[{'role': 'system', 'content': '你是一个专业的电信客服助手,负责帮助用户查询和办理流量套餐业务。\n\n【⭐⭐⭐ 最重要原则】\n- **只处理用户的最后一条消息**，忽略之前的所有用户消息\n- 如果看到多个用户消息，只响应最后一个\n- 每次只调用一个与最后一条用户消息相关的函数\n\n【你的职责】\n1. 理解用户的自然语言需求\n2. **必须**识别用户意图并调用相应的函数，不要进行闲聊\n3. 当信息不完整时,友好地向用户确认缺失的信息\n4. 用专业但亲切的语气与用户交流\n\n【当前可用套餐】\n- 经济套餐: 10G/月, 50元/月, 无限制人群\n- 畅游套餐: 100G/月, 180元/月, 无限制人群\n- 无限套餐: 1000G/月, 300元/月, 无限制人群\n- 校园套餐: 200G/月, 150元/月, 在校生专享\n\n【意图识别规则】\n1. 套餐查询类（query_packages）:\n   - "有什么套餐"、"推荐套餐"、"便宜的套餐"、"100元以内的套餐"\n   - 关键词：套餐、推荐、查询、有什么、价格、便宜\n\n2. 当前套餐查询（query_current_package）:\n   - "我的套餐"、"当前套餐"、"我用的什么套餐"\n   - 关键词：我的、当前、现在的\n\n3. 使用情况查询（query_usage）:  \n   - "用了多少流量"、"剩余流量"、"话费余额"、"查询余量"、"流量使用情况"\n   - 关键词：用了、剩余、余额、余量、流量使用、使用情况\n\n4. 套餐办理（change_package）:\n   - "办理XX套餐"、"换成XX套餐"、"我要办理"\n   - 关键词：办理、更换、变更\n\n【函数调用决策】\n重要：如果对话历史中有多个用户消息，只根据最后一条用户消息来判断意图！\n1. 识别**最后一条用户消息**的关键词\n2. 匹配最相关的单一函数\n3. 只调用该函数\n4. 忽略之前的用户消息\n\n【理解规则】\n- 价格表达要准确理解: "100块以内"→price_max=100, "50元以上"→price_min=50\n- "便宜点的"、"经济实惠"等模糊表达→sort_by="price_asc"\n- "学生套餐"、"校园"→target_user="在校生"\n- 如果用户没有提供手机号,需要礼貌询问，不要从function definitions的description中提取信息当作用户输入的。比如手机号\n\n【重要】\n- **只响应最后一条用户消息**\n- **一次只调用一个函数**\n- 不要试图同时处理多个问题\n- 回答要简洁明了\n'}, {'role': 'assistant', 'content': '正在查询您的当前套餐'}, {'role': 'user', 'content': '有什么套餐'}]
+2025-10-06 11:00:18.760 | INFO     | core.nlu.nlu_engine:_parse_response:189 - 解析响应=ChatCompletion(id='db86d04c-7ee0-41f8-a264-b652df7196c3', choices=[Choice(finish_reason='tool_calls', index=0, logprobs=None, message=ChatCompletionMessage(content='', refusal=None, role='assistant', annotations=None, audio=None, function_call=None, tool_calls=[ChatCompletionMessageFunctionToolCall(id='call_00_K6i28tqcEc1Hdk8WGehuDu2C', function=Function(arguments='{}', name='query_packages'), type='function', index=0)]))], created=1759719617, model='deepseek-chat', object='chat.completion', service_tier=None, system_fingerprint='fp_ffc7281d48_prod0820_fp8_kvcache', usage=CompletionUsage(completion_tokens=8, prompt_tokens=1543, total_tokens=1551, completion_tokens_details=None, prompt_tokens_details=PromptTokensDetails(audio_tokens=None, cached_tokens=1536), prompt_cache_hit_tokens=1536, prompt_cache_miss_tokens=7))
+2025-10-06 11:00:18.760 | INFO     | core.nlu.nlu_engine:_parse_response:190 - 解析响应: tool_calls数量=1
+2025-10-06 11:00:18.760 | INFO     | core.nlu.nlu_engine:_update_session:351 - [context_test_002] 意图切换: query_current_package -> query_packages
+2025-10-06 11:00:18.761 | INFO     | core.nlu.nlu_engine:understand:105 - [context_test_002] NLU完成: intent=query_packages
+2025-10-06 11:00:18.761 | INFO     | core.dst.dialog_state_tracker:track:40 - [DST] 开始跟踪会话: context_test_002
+2025-10-06 11:00:18.761 | DEBUG    | core.dst.state_store:_load_from_redis:112 - 从Redis加载状态: context_test_002
+2025-10-06 11:00:18.762 | INFO     | core.dst.dialog_state_tracker:track:59 - 意图改变: query_current_package → query_packages
+2025-10-06 11:00:18.762 | INFO     | core.dst.slot_manager:fill_slots:61 - 不同领域，仅保留用户信息: ['phone']
+2025-10-06 11:00:18.762 | DEBUG    | core.dst.state_store:_save_to_redis:73 - 状态已保存到Redis: context_test_002
+2025-10-06 11:00:18.763 | INFO     | core.dst.dialog_state_tracker:track:112 - [DST] 状态跟踪完成: turn=3, 需要澄清=False
+2025-10-06 11:00:18.763 | INFO     | executor.db_executor:execute_function:29 - 执行Function: query_packages, 参数: {'phone': '13800138000'}
+2025-10-06 11:00:18.763 | ERROR    | executor.db_executor:execute_function:53 - Function执行失败: query_packages, 错误: DatabaseExecutor.query_packages() got an unexpected keyword argument 'phone'
+2025-10-06 11:00:18.763 | DEBUG    | core.dst.state_store:_save_to_redis:73 - 状态已保存到Redis: context_test_002
+2025-10-06 11:00:18.763 | INFO     | core.chatbot_dst:_log_conversation:234 - [context_test_002] 对话完成 | 意图: query_packages | 轮次: 4 | 耗时: 1795ms
+2025-10-06 11:00:18.763 | INFO     | core.chatbot_dst:chat:46 - [context_test_002] 收到用户输入: 查下我的套餐
+2025-10-06 11:00:18.763 | INFO     | core.nlu.nlu_engine:understand:73 - [context_test_002] 开始NLU理解: 查下我的套餐
+2025-10-06 11:00:18.764 | DEBUG    | core.nlu.nlu_engine:understand:78 - [context_test_002] 预处理后: 查下我的套餐
+2025-10-06 11:00:18.764 | DEBUG    | core.nlu.nlu_engine:_build_messages:162 - 构建的消息: ['system: 你是一个专业的电信客服助手,负责帮助用户查询和办理流量套餐业...', 'assistant: 正在查询套餐信息...', 'user: 查下我的套餐...']
+2025-10-06 11:00:18.764 | INFO     | core.nlu.nlu_engine:understand:87 - 请求模型message=[{'role': 'system', 'content': '你是一个专业的电信客服助手,负责帮助用户查询和办理流量套餐业务。\n\n【⭐⭐⭐ 最重要原则】\n- **只处理用户的最后一条消息**，忽略之前的所有用户消息\n- 如果看到多个用户消息，只响应最后一个\n- 每次只调用一个与最后一条用户消息相关的函数\n\n【你的职责】\n1. 理解用户的自然语言需求\n2. **必须**识别用户意图并调用相应的函数，不要进行闲聊\n3. 当信息不完整时,友好地向用户确认缺失的信息\n4. 用专业但亲切的语气与用户交流\n\n【当前可用套餐】\n- 经济套餐: 10G/月, 50元/月, 无限制人群\n- 畅游套餐: 100G/月, 180元/月, 无限制人群\n- 无限套餐: 1000G/月, 300元/月, 无限制人群\n- 校园套餐: 200G/月, 150元/月, 在校生专享\n\n【意图识别规则】\n1. 套餐查询类（query_packages）:\n   - "有什么套餐"、"推荐套餐"、"便宜的套餐"、"100元以内的套餐"\n   - 关键词：套餐、推荐、查询、有什么、价格、便宜\n\n2. 当前套餐查询（query_current_package）:\n   - "我的套餐"、"当前套餐"、"我用的什么套餐"\n   - 关键词：我的、当前、现在的\n\n3. 使用情况查询（query_usage）:  \n   - "用了多少流量"、"剩余流量"、"话费余额"、"查询余量"、"流量使用情况"\n   - 关键词：用了、剩余、余额、余量、流量使用、使用情况\n\n4. 套餐办理（change_package）:\n   - "办理XX套餐"、"换成XX套餐"、"我要办理"\n   - 关键词：办理、更换、变更\n\n【函数调用决策】\n重要：如果对话历史中有多个用户消息，只根据最后一条用户消息来判断意图！\n1. 识别**最后一条用户消息**的关键词\n2. 匹配最相关的单一函数\n3. 只调用该函数\n4. 忽略之前的用户消息\n\n【理解规则】\n- 价格表达要准确理解: "100块以内"→price_max=100, "50元以上"→price_min=50\n- "便宜点的"、"经济实惠"等模糊表达→sort_by="price_asc"\n- "学生套餐"、"校园"→target_user="在校生"\n- 如果用户没有提供手机号,需要礼貌询问，不要从function definitions的description中提取信息当作用户输入的。比如手机号\n\n【重要】\n- **只响应最后一条用户消息**\n- **一次只调用一个函数**\n- 不要试图同时处理多个问题\n- 回答要简洁明了\n'}, {'role': 'assistant', 'content': '正在查询套餐信息'}, {'role': 'user', 'content': '查下我的套餐'}]
+2025-10-06 11:00:20.677 | INFO     | core.nlu.nlu_engine:_parse_response:189 - 解析响应=ChatCompletion(id='8e5eb87a-eb09-4d07-9169-fcfd1081873b', choices=[Choice(finish_reason='tool_calls', index=0, logprobs=None, message=ChatCompletionMessage(content='', refusal=None, role='assistant', annotations=None, audio=None, function_call=None, tool_calls=[ChatCompletionMessageFunctionToolCall(id='call_00_UCABxH1dU7CxzH3NSmfnSkFy', function=Function(arguments='{"phone": ""}', name='query_current_package'), type='function', index=0)]))], created=1759719618, model='deepseek-chat', object='chat.completion', service_tier=None, system_fingerprint='fp_ffc7281d48_prod0820_fp8_kvcache', usage=CompletionUsage(completion_tokens=13, prompt_tokens=1544, total_tokens=1557, completion_tokens_details=None, prompt_tokens_details=PromptTokensDetails(audio_tokens=None, cached_tokens=1536), prompt_cache_hit_tokens=1536, prompt_cache_miss_tokens=8))
+2025-10-06 11:00:20.678 | INFO     | core.nlu.nlu_engine:_parse_response:190 - 解析响应: tool_calls数量=1
+2025-10-06 11:00:20.678 | INFO     | core.nlu.nlu_engine:_update_session:351 - [context_test_002] 意图切换: query_packages -> query_current_package
+2025-10-06 11:00:20.678 | INFO     | core.nlu.nlu_engine:understand:105 - [context_test_002] NLU完成: intent=query_current_package
+2025-10-06 11:00:20.678 | INFO     | core.dst.dialog_state_tracker:track:40 - [DST] 开始跟踪会话: context_test_002
+2025-10-06 11:00:20.679 | DEBUG    | core.dst.state_store:_load_from_redis:112 - 从Redis加载状态: context_test_002
+2025-10-06 11:00:20.679 | INFO     | core.dst.dialog_state_tracker:track:59 - 意图改变: query_packages → query_current_package
+2025-10-06 11:00:20.679 | INFO     | core.dst.slot_manager:fill_slots:61 - 不同领域，仅保留用户信息: ['phone']
+2025-10-06 11:00:20.680 | DEBUG    | core.dst.state_store:_save_to_redis:73 - 状态已保存到Redis: context_test_002
+2025-10-06 11:00:20.680 | INFO     | core.dst.dialog_state_tracker:track:112 - [DST] 状态跟踪完成: turn=5, 需要澄清=False
+2025-10-06 11:00:20.680 | INFO     | executor.db_executor:execute_function:29 - 执行Function: query_current_package, 参数: {'phone': '13800138000'}
+2025-10-06 11:00:20.685 | INFO     | executor.db_executor:execute_function:50 - Function执行成功: query_current_package
+2025-10-06 11:00:20.685 | DEBUG    | core.dst.state_store:_save_to_redis:73 - 状态已保存到Redis: context_test_002
+2025-10-06 11:00:20.685 | INFO     | core.chatbot_dst:_log_conversation:234 - [context_test_002] 对话完成 | 意图: query_current_package | 轮次: 6 | 耗时: 1922ms
