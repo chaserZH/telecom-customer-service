@@ -102,7 +102,7 @@ class TelecomChatbotPolicy:
                         logger.info(f"✓ 生成推荐: {recommendation['package']['name']}")
 
             # ========== 阶段3b: Policy决策 ⭐ ==========
-            logger.info("【阶段3b】Policy决策...")
+            logger.info(f"【阶段3b】Policy决策...，before exec_result= {exec_result}")
             action = self.policy.decide(dialog_state, exec_result)
             logger.info(f"✓ Policy决策: action={action.action_type.value}")
 
@@ -110,26 +110,27 @@ class TelecomChatbotPolicy:
             logger.info("【阶段3c】NLG生成回复...")
 
             # 尝试从缓存获取
-            cache_key = ResponseCache.generate_key(
-                action.action_type.value,
-                action.intent,
-                action.parameters
-            )
+            # cache_key = ResponseCache.generate_key(
+            #     action.action_type.value,
+            #     action.intent,
+            #     action.parameters
+            # )
 
             response_text = None
-            if cache_key:
-                response_text = self.cache.get(cache_key)
+            # if cache_key:
+            #     response_text = self.cache.get(cache_key)
 
             # 未命中缓存，生成新响应
             if not response_text:
                 response_text = self.nlg.generate(action, dialog_state)
-                # 缓存确定性响应
-                if cache_key:
-                    self.cache.set(cache_key, response_text)
+                # # 缓存确定性响应
+                # if cache_key:
+                #     self.cache.set(cache_key, response_text)
 
-            logger.info(f"✓ NLG完成: 长度={len(response_text)}")
+            logger.info(f"✓ NLG完成: 长度={len(response_text)},exec_result={exec_result}")
 
             # ========== 阶段4: 更新状态 ==========
+            logger.info(f"✓ 更新状态 dialog_state={dialog_state}")
             dialog_state.add_turn('assistant', response_text)
             self.dst.state_store.save(session_id, dialog_state)
 

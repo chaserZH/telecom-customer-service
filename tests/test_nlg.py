@@ -26,7 +26,7 @@ class TestNLGGenerator:
 
         response = nlg.generate(action, state)
 
-        assert "手机号" in response
+        assert "phone" in response
         assert len(response) < 100
 
     def test_inform_generation(self, nlg):

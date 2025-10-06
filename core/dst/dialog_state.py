@@ -5,6 +5,8 @@ from dataclasses import dataclass, field, asdict
 from datetime import datetime
 from typing import Optional, Dict, Any, List
 
+from utils import logger
+
 
 @dataclass
 class DialogTurn:
@@ -94,6 +96,7 @@ class DialogState:
 
     def add_turn(self, role: str, content: str, intent: Optional[str] = None):
         """添加对话轮次"""
+        logger.info(f"add_turn dialog_state={self}")
         turn = DialogTurn(
             turn_id=self.turn_count + 1,
             role=role,

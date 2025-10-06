@@ -67,7 +67,7 @@ FUNCTION_DEFINITIONS =[
                 "properties": {
                     "phone": {
                         "type": "string",
-                        "description": "手机号码,11位数字,格式如13800138000"
+                        "description": "手机号码,11位数字"
                     }
                 },
                 "required": ["phone"]

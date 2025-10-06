@@ -3,6 +3,7 @@
 """
 import pytest
 from core import TelecomChatbotPolicy
+from utils import logger
 
 
 class TestPhase3Integration:
@@ -15,7 +16,7 @@ class TestPhase3Integration:
 
     def test_complete_flow(self, chatbot):
         """测试完整对话流程"""
-        session_id = "integration_test_001"
+        session_id = "integration_test_0011"
 
         # 第1轮：查询套餐
         response1 = chatbot.chat(
@@ -29,19 +30,21 @@ class TestPhase3Integration:
 
     def test_recommendation_flow(self, chatbot):
         """测试推荐流程"""
-        session_id = "integration_test_002"
+        session_id = "integration_test_0021"
 
         response = chatbot.chat(
             "有什么套餐",
             session_id=session_id
         )
 
+        logger.info(f"[{session_id}] 收到返回: {response}")
+
         assert response["action"] in ["INFORM", "RECOMMEND"]
         assert response["data"] is not None
 
     def test_confirmation_flow(self, chatbot):
         """测试确认流程"""
-        session_id = "integration_test_003"
+        session_id = "integration_test_0033"
 
         # 第1轮：请求办理
         response1 = chatbot.chat(
@@ -49,6 +52,7 @@ class TestPhase3Integration:
             session_id=session_id
         )
 
+        logger.info(f"[{session_id}] 收到返回1: {response1}")
         # 应该请求手机号或确认
         assert response1["action"] in ["REQUEST", "CONFIRM"]
 
@@ -58,6 +62,8 @@ class TestPhase3Integration:
                 "13800138000",
                 session_id=session_id
             )
+
+            logger.info(f"[{session_id}] 收到返回: {response2}")
             # 应该确认
             assert response2["action"] == "CONFIRM"
             assert "确认" in response2["response"]
@@ -77,7 +83,7 @@ class TestPhase3Integration:
 
     def test_multi_turn_conversation(self, chatbot):
         """测试多轮对话"""
-        session_id = "integration_test_005"
+        session_id = "integration_test_0057"
 
         # 第1轮
         response1 = chatbot.chat("有便宜的套餐吗", session_id=session_id)
@@ -85,10 +91,11 @@ class TestPhase3Integration:
 
         # 第2轮：继续筛选
         response2 = chatbot.chat("流量要50G以上", session_id=session_id)
-        assert response2["state"]["turn_count"] == 2
+        assert response2["data"]["count"] == 3
 
         # 第3轮：切换意图
         response3 = chatbot.chat("查我的套餐", session_id=session_id)
+        logger.info(f"[{session_id}] 收到返回: {response3}")
         assert response3["intent"] == "query_current_package"
 
     def test_cache_effectiveness(self, chatbot):

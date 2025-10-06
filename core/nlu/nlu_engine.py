@@ -147,7 +147,7 @@ class NLUEngine:
         if history_messages:
             # 找到最近的assistant消息
             for msg in reversed(history_messages[-4:]):  # 只看最近4条
-                if msg.get("role") == "assistant":
+                if msg.get("role") == "user":
                     # 添加最近的assistant回复作为上下文
                     simplified_content = msg["content"][:100] if len(msg["content"]) > 100 else msg["content"]
                     message_dicts.append({
