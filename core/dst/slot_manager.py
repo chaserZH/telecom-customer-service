@@ -40,7 +40,7 @@ class SlotManager:
         if not intent_changed:
             # 意图不变，完全合并
             result = {**current_slots, **new_slots}
-            logger.debug(f"意图不变，合并槽位: {list(new_slots.keys())}")
+            logger.info(f"意图不变，合并槽位: {list(new_slots.keys())}")
 
         elif self._is_same_domain(current_intent, new_intent):
             # 相同领域，保留用户信息 + 部分业务槽位
@@ -49,7 +49,7 @@ class SlotManager:
                 if k in self.USER_INFO_SLOTS or self._should_preserve(k, new_intent)
             }
             result = {**preserved_slots, **new_slots}
-            logger.debug(f"相同领域，保留槽位: {list(preserved_slots.keys())}")
+            logger.info(f"相同领域，保留槽位: {list(preserved_slots.keys())}")
 
         else:
             # 不同领域，仅保留用户信息
@@ -58,7 +58,7 @@ class SlotManager:
                 if k in self.USER_INFO_SLOTS
             }
             result = {**user_slots, **new_slots}
-            logger.debug(f"不同领域，仅保留用户信息: {list(user_slots.keys())}")
+            logger.info(f"不同领域，仅保留用户信息: {list(user_slots.keys())}")
 
         return result
 

@@ -5,7 +5,7 @@ import redis
 from redis.connection import ConnectionPool
 from typing import Optional
 from config import settings
-from utils.logger import logger
+from utils import logger
 
 
 class RedisManager:
@@ -22,12 +22,13 @@ class RedisManager:
 
     def _initialize(self):
         """初始化Redis连接池"""
+        logger.info(f"尝试连接Redis: {settings.REDIS_HOST}:{settings.REDIS_PORT} DB:{settings.REDIS_DB}")
         try:
             connection_params = {
                 'host': settings.REDIS_HOST,
                 'port': settings.REDIS_PORT,
                 'db': settings.REDIS_DB,
-                'max_connections': settings.get('REDIS_MAX_CONNECTIONS', 50),
+                'max_connections': getattr(settings, 'REDIS_MAX_CONNECTIONS', 50),
                 'decode_responses': True,
                 'socket_timeout': 5,
                 'socket_connect_timeout': 5,
