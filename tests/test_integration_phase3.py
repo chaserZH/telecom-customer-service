@@ -44,7 +44,7 @@ class TestPhase3Integration:
 
     def test_confirmation_flow(self, chatbot):
         """测试确认流程"""
-        session_id = "integration_test_0033"
+        session_id = "integration_test_0035"
 
         # 第1轮：请求办理
         response1 = chatbot.chat(

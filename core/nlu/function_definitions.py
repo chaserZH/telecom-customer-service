@@ -16,24 +16,20 @@ class FunctionCategory(Enum):
 # Function定义列表
 FUNCTION_DEFINITIONS =[
     {
-        "type":"function",
-        "function":{
-            "name":"query_packages",
-            "description": "查询符合条件的流量套餐列表。当用户想了解套餐、比较套餐、查找合适的套餐时使用",
+        "type": "function",
+        "function": {
+            "name": "query_packages",
+            "description": "查询符合条件的套餐列表",  # 精简，去除示例
             "parameters": {
-                "type":"object",
+                "type": "object",
                 "properties": {
-                    "price_min":{
-                        "type":"number",
-                        "description": "最低价格(元/月),例如'50元以上'表示price_min=50"
+                    "price_min": {
+                        "type": "number",
+                        "description": "最低价格(元/月)"  # 去除示例
                     },
-                    "price_max":{
-                        "type":"number",
-                        "description": "最高价格(元/月),例如'100元以内'、'不超过200'表示price_max=100或200"
-                    },
-                    "data_max":{
-                        "type":"number",
-                        "description": "最多流量(GB/月)"
+                    "price_max": {
+                        "type": "number",
+                        "description": "最高价格(元/月)"
                     },
                     "data_min": {
                         "type": "number",
@@ -42,26 +38,24 @@ FUNCTION_DEFINITIONS =[
                     "target_user": {
                         "type": "string",
                         "enum": ["无限制", "在校生"],
-                        "description": "适用人群。'学生套餐'、'校园套餐'对应'在校生'"
+                        "description": "适用人群"
                     },
                     "sort_by": {
                         "type": "string",
                         "enum": ["price_asc", "price_desc", "data_desc"],
-                        "description": "排序方式。price_asc=价格升序(便宜优先), price_desc=价格降序, data_desc=流量降序",
+                        "description": "排序方式",
                         "default": "price_asc"
                     }
-                }
-            },
-            "required": []
+                },
+                "required": []
+            }
         }
     },
     {
         "type": "function",
         "function": {
             "name": "query_current_package",
-            "description": "查询用户当前使用的套餐信息。"
-                           "当用户询问'我的套餐'、'当前套餐'、'查下我的套餐'、'我用的什么套餐'等问题时**必须**使用此函数。"
-                           "需要用户提供手机号。",
+            "description": "查询用户当前套餐信息",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -118,9 +112,7 @@ FUNCTION_DEFINITIONS =[
         "type": "function",
         "function": {
             "name": "query_usage",
-            "description": """查询用户的流量、话费使用情况。
-            **使用场景**：当用户询问'用了多少流量'、'剩余流量'、'话费余额'、'还有多少'时使用。
-            **关键词**：用了、剩余、余额、消费、使用情况""",
+            "description": "查询流量、话费使用情况",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -131,7 +123,7 @@ FUNCTION_DEFINITIONS =[
                     "query_type": {
                         "type": "string",
                         "enum": ["data", "balance", "all"],
-                        "description": "查询类型: data=流量使用, balance=余额, all=全部",
+                        "description": "查询类型",
                         "default": "all"
                     }
                 },
