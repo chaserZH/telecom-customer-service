@@ -131,6 +131,7 @@ class NLGGenerator:
         """
         # 选择模板
         template = self._select_template(action, state)
+        logger.info(f"选择模版为={template}")
 
         # 准备参数
         params = self._prepare_template_params(action, state)
@@ -138,7 +139,7 @@ class NLGGenerator:
         try:
             # 格式化模板
             response = template.format(**params)
-            logger.debug(f"[NLG] 模板生成成功")
+            logger.info(f"[NLG] 模板生成成功")
             return response
         except KeyError as e:
             logger.error(f"[NLG] 模板参数缺失: {e}")
@@ -200,6 +201,7 @@ class NLGGenerator:
             Dict: 参数字典
         """
         params = dict(action.parameters)
+        logger.info(f"_prepare_template_params params={params}")
 
         # 格式化套餐列表
         if "data" in params and isinstance(params["data"], list):

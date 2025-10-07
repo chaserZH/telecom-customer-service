@@ -5,6 +5,7 @@ description = "Add your description here"
 requires-python = ">=3.13"
 dependencies = [
     "cryptography>=46.0.2",
+    "fastapi>=0.118.0",
     "loguru>=0.7.3",
     "openai>=2.0.0",
     "pydantic-settings>=2.11.0",
@@ -12,4 +13,7 @@ dependencies = [
     "pytest>=8.4.2",
     "redis>=6.4.0",
     "sqlalchemy>=2.0.43",
+    "starlette>=0.48.0",
+    "uvicorn[standard]>=0.37.0",
+    "websockets>=15.0.1",
 ]
