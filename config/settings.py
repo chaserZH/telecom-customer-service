@@ -54,6 +54,12 @@ class Settings(BaseSettings):
     SESSION_TIMEOUT: int = 1800  # 30分钟
     MAX_CONTEXT_TURNS: int = 10
 
+    # 确认相关配置
+    # 🔥 新增：确认相关配置（带类型注解）
+    CONFIRMATION_TIMEOUT_MINUTES: int = 5  # 确认超时时间（分钟）
+    CONFIRMATION_STRICT_MODE: bool = False  # 严格模式
+    CONFIRMATION_REMINDER: bool = True  # 是否启用友好提醒
+
     # API配置
     API_HOST: str = "0.0.0.0"
     API_PORT: int = 8000
@@ -75,4 +81,5 @@ class Settings(BaseSettings):
         case_sensitive = True
         # 允许额外的字段（兼容TOMMY_DEEPSEEK_API_KEY这样的命名）
         extra = "ignore"
+        env_file_encoding = "utf-8"
 

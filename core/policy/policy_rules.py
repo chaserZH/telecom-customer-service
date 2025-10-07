@@ -19,20 +19,17 @@ class PolicyRules:
     PRICE_THRESHOLD = 200
 
     def apply_confirmation_rules(self, state: DialogState) -> bool:
-        """
-        应用确认规则
+        """应用确认规则"""
 
-        Args:
-            state: 对话状态
+        # 🔥 新增：如果已经在待确认状态，不重复确认
+        if state.pending_confirmation:
+            return False
 
-        Returns:
-            bool: 是否需要确认
-        """
         # 规则1: 高风险操作需要确认
         if state.current_intent in self.RISKY_INTENTS:
-            if not state.user_profile.get("confirmed"):
-                logger.info(f"[Rule] 高风险操作需要确认: {state.current_intent}")
-                return True
+            # 🔥 修改：移除 user_profile 检查（简化逻辑）
+            logger.info(f"[Rule] 高风险操作需要确认: {state.current_intent}")
+            return True
 
         # 规则2: 高价套餐需要确认
         price = state.slots.get("price") or state.slots.get("new_package_price")

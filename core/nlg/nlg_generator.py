@@ -187,7 +187,64 @@ class NLGGenerator:
         if isinstance(template, list):
             template = random.choice(template)
 
+        # ========== 新增：参数验证和降级 ==========
+        if not self._validate_template_params(template, action.parameters):
+            logger.warning(f"[NLG] 模板参数不完整，使用降级模板")
+            template = self._get_fallback_template(action, template)
+
         return template
+
+    def _validate_template_params(self, template: str, params: dict) -> bool:
+        """
+        验证模板所需参数是否齐全
+
+        Args:
+            template: 模板字符串
+            params: 参数字典
+
+        Returns:
+            bool: 参数是否齐全
+        """
+        import re
+
+        # 提取模板中的占位符
+        placeholders = re.findall(r'\{(\w+)\}', template)
+
+        # 检查每个占位符是否在参数中
+        for placeholder in placeholders:
+            if placeholder not in params or params[placeholder] is None or params[placeholder] == "":
+                return False
+
+        return True
+
+    def _get_fallback_template(self, action: Action, original_template: str) -> str:
+        """
+        获取降级模板
+
+        Args:
+            action: 系统动作
+            original_template: 原始模板
+
+        Returns:
+            str: 降级模板
+        """
+        # 预定义的降级模板（只依赖必填参数）
+        fallback_templates = {
+            "change_package": "已成功为您办理【{new_package_name}】，次月生效！",
+            "query_packages": "为您找到相关套餐",
+            "query_current_package": "已查询到您的套餐信息",
+            "query_usage": "已查询到您的使用情况",
+        }
+
+        template = fallback_templates.get(action.intent)
+        if template and self._validate_template_params(template, action.parameters):
+            return template
+
+        # 最终降级：使用 message 字段或通用消息
+        if "message" in action.parameters:
+            return "{message}"
+
+        return "处理完成"
 
     def _prepare_template_params(self, action: Action, state: DialogState) -> Dict[str, Any]:
         """
@@ -207,10 +264,13 @@ class NLGGenerator:
         if "data" in params and isinstance(params["data"], list):
             params["package_list"] = self.formatter.format_package_list(params["data"])
 
+        # ========== 新增：确保所有参数都有值 ==========
         # 确保所有参数都是字符串（避免format错误）
-        for key, value in params.items():
+        for key, value in list(params.items()):
             if value is None:
                 params[key] = ""
+            elif isinstance(value, (int, float)):
+                params[key] = str(value)
             elif not isinstance(value, str):
                 params[key] = str(value)
 

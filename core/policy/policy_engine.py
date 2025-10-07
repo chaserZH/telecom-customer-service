@@ -158,7 +158,7 @@ class PolicyEngine:
         Returns:
             Action: 确认动作
         """
-        logger.info(f"[Policy] 创建确认: intent={state.current_intent},state={state}")
+        logger.info(f"[Policy] 创建确认: intent={state.current_intent}")
 
         # 创建确认记录
         confirmation_id = self.confirmation_manager.create_confirmation(

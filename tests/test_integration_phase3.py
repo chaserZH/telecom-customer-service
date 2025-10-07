@@ -122,3 +122,30 @@ class TestPhase3Integration:
         # 获取缓存统计
         stats = chatbot.get_cache_stats()
         assert "size" in stats
+
+    def test_confirm_conversation(self, chatbot):
+
+        session_id = "test_001"
+
+        # 测试1：办理套餐（应该要求确认）
+        print("=== 测试1：办理套餐 ===")
+        result1 = chatbot.chat("我要办理经济套餐，手机号13800138000", session_id=session_id)
+        print(f"响应: {result1['response']}")
+        print(f"Action: {result1['action']}")
+        print(f"待确认: {result1['state']['pending_confirmation']}")
+        # 预期：返回确认提示，数据库未执行
+
+        # 测试2：用户确认（应该执行业务）
+        print("\n=== 测试2：用户确认 ===")
+        result2 = chatbot.chat("确认", session_id=session_id)
+        print(f"响应: {result2['response']}")
+        print(f"Action: {result2['action']}")
+        print(f"数据: {result2.get('data', {})}")
+        # 预期：执行业务，返回成功消息
+
+        # 测试3：取消操作
+        print("\n=== 测试3：取消操作 ===")
+        session_id2 = "test_002"
+        chatbot.chat("我要办理无限套餐，手机号13900139000", session_id=session_id2)
+        result3 = chatbot.chat("算了不办了", session_id=session_id2)
+        print(f"响应: {result3['response']}")

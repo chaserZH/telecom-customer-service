@@ -71,7 +71,16 @@ class SlotManager:
                 intent1 in self.SAME_DOMAIN_INTENTS.get(intent2, set()))
 
     def _should_preserve(self, slot_name: str, new_intent: str) -> bool:
-        """判断槽位是否应该保留"""
+        """
+        判断槽位是否应该保留
+
+        Args:
+            slot_name: 槽位名称
+            new_intent: 新意图
+
+        Returns:
+            bool: 是否保留
+        """
         # 可以根据具体业务逻辑扩展
         # 例如：查询套餐时的价格范围，在切换到办理套餐时也可能有用
         preserve_rules = {

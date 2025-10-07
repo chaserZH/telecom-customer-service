@@ -2,6 +2,7 @@
 """
 数据库执行器
 """
+import inspect
 from typing import Dict, Any, Optional
 
 from database import db_manager
@@ -46,7 +47,11 @@ class DatabaseExecutor:
             }
 
         try:
-            result = executor(**parameters)
+            # 🔥 关键改进：过滤参数，只传递函数需要的参数
+            filtered_params = self._filter_params(executor, parameters)
+            logger.debug(f"过滤后参数: {filtered_params}")
+
+            result = executor(**filtered_params)
             logger.info(f"Function执行成功: {function_name}")
             return result
         except Exception as e:
@@ -55,6 +60,33 @@ class DatabaseExecutor:
                 "success": False,
                 "error": f"执行出错: {str(e)}"
             }
+
+    def _filter_params(self, func, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        过滤参数，只保留函数签名中定义的参数
+
+        Args:
+            func: 目标函数
+            params: 原始参数字典
+
+        Returns:
+            过滤后的参数字典
+        """
+        # 获取函数签名
+        sig = inspect.signature(func)
+
+        # 获取函数接受的参数名
+        valid_params = set(sig.parameters.keys())
+
+        # 过滤参数
+        filtered = {}
+        for key, value in params.items():
+            if key in valid_params:
+                filtered[key] = value
+            else:
+                logger.debug(f"跳过多余参数: {key}={value}")
+
+        return filtered
 
     def query_packages(self,
                        price_min: Optional[float] = None,
@@ -209,8 +241,13 @@ class DatabaseExecutor:
                 "error": "手机号格式不正确"
             }
 
-        # 查找新套餐ID
-        sql_package = "SELECT id FROM t_packages WHERE name = :package_name AND status = 1"
+        # 查找新套餐的完整信息（修改：增加所有字段）
+        sql_package = """
+                      SELECT id, name, price, data_gb, voice_minutes, target_user, description
+                      FROM t_packages
+                      WHERE name = :package_name \
+                        AND status = 1 \
+                      """
         rows = self.db.execute_query(sql_package, {"package_name": new_package_name})
 
         if not rows:
@@ -219,7 +256,17 @@ class DatabaseExecutor:
                 "error": f"未找到套餐: {new_package_name}"
             }
 
+        # 解析套餐信息（新增）
         package_id = rows[0][0]
+        package_info = {
+            "id": rows[0][0],
+            "name": rows[0][1],
+            "price": float(rows[0][2]),
+            "data_gb": rows[0][3],
+            "voice_minutes": rows[0][4],
+            "target_user": rows[0][5],
+            "description": rows[0][6]
+        }
 
         # 更新用户套餐
         sql_update = """
@@ -234,7 +281,7 @@ class DatabaseExecutor:
         })
 
         if rowcount == 0:
-            # 用户不存在,创建新用户
+            # 用户不存在，创建新用户
             sql_insert = """
                          INSERT INTO t_user (phone, current_package_id)
                          VALUES (:phone, :package_id) \
@@ -244,9 +291,15 @@ class DatabaseExecutor:
                 "package_id": package_id
             })
 
+        # 返回完整信息（修改：增加所有参数）
         return {
             "success": True,
-            "message": f"已成功为您办理【{new_package_name}】,次月生效"
+            "message": f"已成功为您办理【{new_package_name}】，次月生效",
+            "phone": phone,
+            "new_package_name": package_info["name"],
+            "price": package_info["price"],
+            "data_gb": package_info["data_gb"],
+            "voice_minutes": package_info["voice_minutes"]
         }
 
     def query_usage(self, phone: str, query_type: str = "all") -> Dict[str, Any]:

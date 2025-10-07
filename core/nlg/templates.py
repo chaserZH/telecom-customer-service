@@ -69,8 +69,9 @@ RESPONSE_TEMPLATES: Dict[str, Dict[str, Union[str, List[str], Dict]]] = {
 
 如需办理，请告诉我您的手机号码""",
 
+        # 修改 change_package 模板（提供简化版和详细版）
         "change_package": [
-            "已成功为您办理【{new_package_name}】，次月生效！",
+            "已成功为您办理【{new_package_name}】，次月生效！",  # 简化版（推荐）
             "办理成功！您的【{new_package_name}】将在下月生效"
         ],
 
@@ -85,9 +86,10 @@ RESPONSE_TEMPLATES: Dict[str, Dict[str, Union[str, List[str], Dict]]] = {
 
     # CONFIRM类模板
     "CONFIRM": {
+        # 修改 change_package 确认模板
         "change_package": [
-            "请确认: 为手机号 {phone} 办理【{new_package_name}】套餐（{price}元/月），是否确认？",
-            "确认为 {phone} 更换为【{new_package_name}】吗？月费{price}元"
+            "请确认：为手机号 {phone} 办理【{new_package_name}】套餐，是否确认？",
+            "确认为 {phone} 更换为【{new_package_name}】吗？"
         ],
         "cancel_service": [
             "确认为 {phone} 取消服务吗？此操作不可恢复",
