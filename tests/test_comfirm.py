@@ -128,3 +128,13 @@ class TestPhase3Confirm:
         else:
             print("\n❌ 测试失败")
 
+    #场景1：转移到相关话题（应保留）
+    def test_detail(self, chatbot):
+        session_id = "test_related2"
+        bot = TelecomChatbotPolicy()
+        print("\n步骤2：查询详情")
+        r2 = bot.chat("查询下校园套餐详情", session_id=session_id)
+        state2 = bot.dst.get_state(session_id)
+        print(f"DST 中的 state: {state2.pending_confirmation}")
+
+

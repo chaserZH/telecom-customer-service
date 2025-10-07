@@ -135,7 +135,7 @@ FUNCTION_DEFINITIONS =[
         "type": "function",
         "function": {
             "name": "business_consultation",
-            "description": "业务咨询和政策说明。当用户询问业务规则、办理流程、优惠活动等非数据查询问题时使用(预留RAG接口)",
+            "description": "业务咨询和政策说明。当用户询问'如何办理'、'需要什么条件'等办理流程问题时使用，不用于实际的套餐办理操作",
             "parameters": {
                 "type": "object",
                 "properties": {

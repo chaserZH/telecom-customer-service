@@ -207,15 +207,82 @@ class NLGGenerator:
         """
         import re
 
+        logger.info(f"template: {template}, params: {params}")
+
         # 提取模板中的占位符
         placeholders = re.findall(r'\{(\w+)\}', template)
 
+        # 使用与 _prepare_template_params 相同的数据处理逻辑
+        processed_params = self._process_template_params(params)
+
         # 检查每个占位符是否在参数中
         for placeholder in placeholders:
-            if placeholder not in params or params[placeholder] is None or params[placeholder] == "":
+            if placeholder not in processed_params or processed_params[placeholder] is None or processed_params[
+                placeholder] == "":
+                logger.warning(f"参数验证失败: 占位符 '{placeholder}' 在参数中不存在或为空")
                 return False
 
         return True
+
+    def _prepare_template_params(self, action: Action, state: DialogState) -> Dict[str, Any]:
+        """
+        准备模板参数
+
+        Args:
+            action: 系统动作
+            state: 对话状态
+
+        Returns:
+            Dict: 参数字典
+        """
+        params = dict(action.parameters)
+        logger.info(f"_prepare_template_params params={params}")
+
+        # 使用统一的参数处理方法
+        params = self._process_template_params(params)
+
+        # 格式化套餐列表（保持原有逻辑）
+        if "data" in params and isinstance(params["data"], list):
+            params["package_list"] = self.formatter.format_package_list(params["data"])
+
+        # 确保所有参数都有值
+        for key, value in list(params.items()):
+            if value is None:
+                params[key] = ""
+            elif isinstance(value, (int, float)):
+                # 保持数值类型，让模板可以格式化
+                pass
+            elif not isinstance(value, str):
+                params[key] = str(value)
+
+        return params
+
+    def _process_template_params(self, params: dict) -> dict:
+        """
+        处理模板参数（供验证和渲染共用）
+
+        Args:
+            params: 原始参数字典
+
+        Returns:
+            dict: 处理后的参数字典
+        """
+        processed_params = dict(params)
+
+        # 处理data字段
+        if "data" in processed_params:
+            data = processed_params["data"]
+
+            # 如果data是字典，将其字段展开到根级别
+            if isinstance(data, dict):
+                for key, value in data.items():
+                    processed_params[key] = value
+            # 如果data是列表且不为空，取第一个元素展开
+            elif isinstance(data, list) and len(data) > 0 and isinstance(data[0], dict):
+                for key, value in data[0].items():
+                    processed_params[key] = value
+
+        return processed_params
 
     def _get_fallback_template(self, action: Action, original_template: str) -> str:
         """
@@ -246,35 +313,7 @@ class NLGGenerator:
 
         return "处理完成"
 
-    def _prepare_template_params(self, action: Action, state: DialogState) -> Dict[str, Any]:
-        """
-        准备模板参数
 
-        Args:
-            action: 系统动作
-            state: 对话状态
-
-        Returns:
-            Dict: 参数字典
-        """
-        params = dict(action.parameters)
-        logger.info(f"_prepare_template_params params={params}")
-
-        # 格式化套餐列表
-        if "data" in params and isinstance(params["data"], list):
-            params["package_list"] = self.formatter.format_package_list(params["data"])
-
-        # ========== 新增：确保所有参数都有值 ==========
-        # 确保所有参数都是字符串（避免format错误）
-        for key, value in list(params.items()):
-            if value is None:
-                params[key] = ""
-            elif isinstance(value, (int, float)):
-                params[key] = str(value)
-            elif not isinstance(value, str):
-                params[key] = str(value)
-
-        return params
 
     def _generate_from_llm(self, action: Action, state: DialogState) -> str:
         """
