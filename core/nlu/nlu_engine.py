@@ -152,11 +152,11 @@ class NLUEngine:
             )
         )
 
-        # 2. 判断是否在槽位填充状态
+        # 2. 🔥 上下文传递（分场景）
         is_slot_filling = self._is_slot_filling_state(context)
 
         if is_slot_filling:
-            # 场景A: 槽位填充 - 添加精简上下文
+            # 场景A: 槽位填充 - 详细任务上下文（原有逻辑）
             task_context = self._build_task_context(context)
             messages.append(
                 ChatCompletionUserMessageParam(
@@ -164,6 +164,16 @@ class NLUEngine:
                     content=task_context
                 )
             )
+        else:
+            # 场景B: 非槽位填充 - 简洁上下文提示（新增逻辑）⭐
+            recent_context = self._build_recent_context(context)
+            if recent_context:
+                messages.append(
+                    ChatCompletionUserMessageParam(
+                        role="user",
+                        content=recent_context
+                    )
+                )
 
         # 3. 当前用户输入
         messages.append(
@@ -174,6 +184,99 @@ class NLUEngine:
         )
 
         return messages
+
+    def _build_recent_context(self, context: Dict) -> str:
+        """
+        构建最近的对话上下文（改进版）
+
+        策略：
+        - 如果在槽位填充状态：详细的任务上下文
+        - 如果有最近意图：简洁的上下文提示
+        - 否则：不添加上下文
+
+        Returns:
+            str: 上下文字符串
+        """
+        # 场景1: 槽位填充状态（原有逻辑）
+        if self._is_slot_filling_state(context):
+            return self._build_task_context(context)
+
+        # 场景2: 有最近的意图和参数（新增）🔥
+        current_intent = context.get("current_intent")
+        slot_values = context.get("slot_values", {})
+
+        if current_intent and slot_values:
+            return self._build_intent_context(current_intent, slot_values)
+
+        # 场景3: 仅有意图（新增）🔥
+        if current_intent:
+            return self._build_simple_intent_context(current_intent)
+
+        # 无上下文
+        return ""
+
+    def _build_intent_context(self, intent: str, slot_values: Dict) -> str:
+        """
+        构建意图上下文（新增方法）
+
+        Args:
+            intent: 当前意图
+            slot_values: 已知槽位
+
+        Returns:
+            str: 上下文描述
+        """
+        # 意图描述映射
+        intent_desc = {
+            "query_packages": "查询套餐",
+            "query_package_detail": "查询套餐详情",
+            "query_current_package": "查询当前套餐",
+            "query_usage": "查询使用情况",
+            "change_package": "办理套餐"
+        }
+
+        # 槽位描述映射
+        slot_desc = {
+            "package_name": "套餐",
+            "new_package_name": "新套餐",
+            "price_max": "价格上限",
+            "data_min": "流量下限"
+        }
+
+        task = intent_desc.get(intent, intent)
+
+        # 提取关键槽位
+        key_info = []
+        for key, value in slot_values.items():
+            if key == "phone":  # 手机号不在这里暴露
+                continue
+            desc = slot_desc.get(key, key)
+            key_info.append(f"{desc}: {value}")
+
+        if key_info:
+            return f"【上下文】用户刚刚{task}，涉及：{', '.join(key_info)}"
+        else:
+            return f"【上下文】用户刚刚{task}"
+
+    def _build_simple_intent_context(self, intent: str) -> str:
+        """
+        构建简单意图上下文（无槽位）
+
+        Args:
+            intent: 意图
+
+        Returns:
+            str: 上下文描述
+        """
+        intent_desc = {
+            "query_packages": "查询套餐列表",
+            "query_package_detail": "查询某个套餐的详情",
+            "query_current_package": "查询当前套餐",
+            "query_usage": "查询使用情况"
+        }
+
+        task = intent_desc.get(intent, intent)
+        return f"【上下文】用户刚刚{task}"
 
     def _is_slot_filling_state(self, context: Dict) -> bool:
         """
