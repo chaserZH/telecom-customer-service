@@ -74,15 +74,43 @@ class TelecomChatbotPolicy:
             # 先加载状态，检查是否有待确认的操作
             current_state = self.dst.get_state(session_id)
 
-            if current_state.pending_confirmation:
-                logger.info("【阶段0】检测到待确认状态，处理确认响应...")
-                confirmation_result = self._handle_confirmation_response(
-                    user_input,
-                    session_id,
-                    current_state
-                )
-                if confirmation_result:
-                    return confirmation_result
+            logger.info(f"【阶段0】检查状态: pending_confirmation={current_state.pending_confirmation}")
+
+            # 🔥 关键修改：即使没有 pending_confirmation，也尝试识别确认/取消词
+            # 这样可以防止用户连续说"确认"时出现问题
+            if self._is_confirmation_word(user_input) or self._is_cancellation_word(user_input):
+                if current_state.pending_confirmation:
+                    logger.info("【阶段0】检测到待确认状态，处理确认响应...")
+                    confirmation_result = self._handle_confirmation_response(
+                        user_input,
+                        session_id,
+                        current_state
+                    )
+                    if confirmation_result:
+                        return confirmation_result
+                else:
+                    # 用户说确认/取消，但没有待确认操作
+                    logger.warning("【阶段0】用户说确认/取消，但没有待确认操作")
+                    # 可以给出友好提示
+                    if self._is_confirmation_word(user_input):
+                        return {
+                            "session_id": session_id,
+                            "response": "目前没有需要确认的操作。有什么可以帮您的吗？",
+                            "action": "INFORM",
+                            "intent": "chat",
+                            "requires_confirmation": False,
+                            "data": None,
+                            "state": {
+                                "turn_count": current_state.turn_count,
+                                "slots": current_state.slots,
+                                "needs_clarification": False,
+                                "pending_confirmation": False
+                            },
+                            "metadata": {
+                                "execution_time_ms": 0,
+                                "timestamp": datetime.now().isoformat()
+                            }
+                        }
                 # 如果不是确认/取消，继续正常流程（用户可能换了话题）
 
             # ========== 阶段1: NLU理解 ==========
@@ -109,13 +137,20 @@ class TelecomChatbotPolicy:
             exec_result = None
 
             if action.action_type == ActionType.CONFIRM:
-                # 🔥 需要确认：不执行业务，保存待确认状态
+                # 需要确认：不执行业务，保存待确认状态
                 logger.info("【阶段3b】需要确认，保存待确认状态，跳过业务执行")
+
+                # 🔥 关键：这里必须设置待确认状态
                 dialog_state.set_pending_confirmation(
                     dialog_state.current_intent,
                     dialog_state.slots
                 )
+
+                # 🔥 关键：这里必须保存状态
                 self.dst.state_store.save(session_id, dialog_state)
+
+                logger.info(f"【确认状态已保存】pending={dialog_state.pending_confirmation}, "
+                            f"intent={dialog_state.confirmation_intent}")
 
             elif not dialog_state.needs_clarification and dialog_state.current_intent:
                 # 🔥 不需要确认：执行业务
@@ -206,6 +241,14 @@ class TelecomChatbotPolicy:
                                       dialog_state: DialogState) -> Optional[Dict]:
         """
         处理确认响应（增强版）
+
+        Args:
+            user_input: 用户输入
+            session_id: 会话ID
+            dialog_state: 对话状态
+
+        Returns:
+            Optional[Dict]: 如果是确认响应，返回处理结果；否则返回None
         """
         # 🔥 先检查是否超时
         if dialog_state.is_confirmation_expired():
@@ -234,10 +277,8 @@ class TelecomChatbotPolicy:
         # 检查是否是确认词
         if self._is_confirmation_word(user_input):
             logger.info("【确认处理】用户确认操作")
-
-            # 🔥 记录确认的意图和参数（用于日志）
-            logger.info(f"执行待确认操作: {dialog_state.confirmation_intent}, "
-                        f"参数: {dialog_state.confirmation_slots}")
+            logger.info(f"【确认处理】待确认意图: {dialog_state.confirmation_intent}")
+            logger.info(f"【确认处理】待确认参数: {dialog_state.confirmation_slots}")
 
             # 执行待确认的业务
             exec_result = self.db_executor.execute_function(
@@ -246,20 +287,22 @@ class TelecomChatbotPolicy:
             )
 
             # 清除待确认状态
+            confirmed_intent = dialog_state.confirmation_intent
+            confirmed_slots = dialog_state.confirmation_slots.copy()
             dialog_state.clear_pending_confirmation()
 
             # 生成回复
             if exec_result and exec_result.get("success"):
                 action = Action(
                     action_type=ActionType.INFORM,
-                    intent=dialog_state.confirmation_intent,
+                    intent=confirmed_intent,
                     parameters=exec_result
                 )
                 response_text = self.nlg.generate(action, dialog_state)
             else:
                 action = Action(
                     action_type=ActionType.APOLOGIZE,
-                    intent=dialog_state.confirmation_intent,
+                    intent=confirmed_intent,
                     parameters=exec_result or {"error": "执行失败"}
                 )
                 response_text = self.nlg.generate(action, dialog_state)
@@ -272,12 +315,12 @@ class TelecomChatbotPolicy:
                 "session_id": session_id,
                 "response": response_text,
                 "action": action.action_type.value,
-                "intent": dialog_state.confirmation_intent,
+                "intent": confirmed_intent,
                 "requires_confirmation": False,
                 "data": exec_result,
                 "state": {
                     "turn_count": dialog_state.turn_count,
-                    "slots": dialog_state.confirmation_slots,
+                    "slots": confirmed_slots,
                     "needs_clarification": False,
                     "pending_confirmation": False
                 },
@@ -318,31 +361,97 @@ class TelecomChatbotPolicy:
                 }
             }
 
-        # 🔥 不是确认/取消，但有待确认状态
-        # 返回 None，让系统继续正常流程（处理新意图）
-        # DST 中已经根据意图相关性决定是否清除待确认状态
-        logger.info("【确认处理】用户输入不是确认/取消，继续正常流程")
+        # 不是确认/取消，返回 None
         return None
 
     def _is_confirmation_word(self, text: str) -> bool:
-        """判断是否为确认词"""
-        confirmation_words = [
+        """
+        判断是否为确认词（改进版：避免误判业务意图）
+
+        Args:
+            text: 用户输入
+
+        Returns:
+            bool: 是否为确认
+        """
+        text_lower = text.lower().strip()
+
+        # 🔥 规则1：如果包含套餐名称，不是确认词（是业务意图）
+        package_names = ["经济套餐", "畅游套餐", "无限套餐", "校园套餐"]
+        for pkg in package_names:
+            if pkg in text:
+                logger.debug(f"包含套餐名称'{pkg}'，不是确认词")
+                return False
+
+        # 🔥 规则2：如果包含电话号码，不是确认词（是业务意图）
+        import re
+        if re.search(r'1[3-9]\d{9}', text):
+            logger.debug(f"包含手机号，不是确认词")
+            return False
+
+        # 🔥 规则3：检查确认词（精确匹配或组合词）
+        # 纯确认词（高优先级，完全匹配）
+        exact_confirmation_words = [
             "确认", "确定", "是的", "是", "对", "好的", "可以",
-            "ok", "yes", "嗯", "行", "同意", "没问题", "办理"
+            "ok", "yes", "嗯", "行", "同意", "没问题"
         ]
 
-        text_lower = text.lower().strip()
-        return any(word in text_lower for word in confirmation_words)
+        # 完全匹配（去除标点后）
+        clean_text = re.sub(r'[，。！？、\s]+', '', text_lower)
+        if clean_text in exact_confirmation_words:
+            logger.info(f"精确匹配确认词: '{text}'")
+            return True
+
+        # 组合确认词（包含即可）
+        combination_confirmation_words = [
+            "确认办理", "确定办理", "确认办", "好的办理",
+            "可以办理", "同意办理", "办吧", "办理吧",
+            "就这个", "就办这个", "就要这个", "要这个"
+        ]
+
+        for word in combination_confirmation_words:
+            if word in text_lower:
+                logger.info(f"识别为确认词: '{text}' 包含 '{word}'")
+                return True
+
+        # 🔥 规则4：特殊处理"办理"
+        # 仅当：
+        # - 单独的"办理"
+        # - 或者很短的句子（<5个字）中包含"办理"
+        if "办理" in text_lower and len(text) <= 5:
+            logger.info(f"识别为确认词: '{text}' 短句包含办理")
+            return True
+
+        return False
 
     def _is_cancellation_word(self, text: str) -> bool:
-        """判断是否为取消词"""
+        """
+        判断是否为取消词
+
+        Args:
+            text: 用户输入
+
+        Returns:
+            bool: 是否为取消
+        """
+        text_lower = text.lower().strip()
+
         cancellation_words = [
+            # 单字/词
             "取消", "不", "不要", "算了", "不办", "不确认",
-            "no", "cancel", "不行", "不用"
+            "no", "cancel", "不行", "不用",
+
+            # 组合词
+            "不办了", "算了不办", "取消办理", "不想办了",
+            "再想想", "考虑一下", "暂时不办"
         ]
 
-        text_lower = text.lower().strip()
-        return any(word in text_lower for word in cancellation_words)
+        for word in cancellation_words:
+            if word in text_lower:
+                logger.info(f"识别为取消词: '{text}' 包含 '{word}'")
+                return True
+
+        return False
 
     def get_session_state(self, session_id: str) -> Dict:
         """获取会话状态（用于调试）"""

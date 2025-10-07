@@ -78,4 +78,53 @@ class TestPhase3Confirm:
         print(f"响应: {r2['response']}")
         # 预期包含："💡 提示：您还有一个待确认的套餐办理..." ✅
 
+    def test_diagnose(self, chatbot):
+        bot = TelecomChatbotPolicy()
+        session_id = "simple_test"
+
+        # 步骤1
+        print("步骤1：发起办理")
+        r1 = bot.chat("办理经济套餐，13800138000", session_id=session_id)
+        state1 = bot.dst.get_state(session_id)
+
+        print(f"返回的 state: {r1['state']['pending_confirmation']}")
+        print(f"DST 中的 state: {state1.pending_confirmation}")
+        print(f"确认意图: {state1.confirmation_intent}")
+        print(f"确认参数: {state1.confirmation_slots}")
+
+        # 🔥 关键检查点
+        if not state1.pending_confirmation:
+            print("\n❌ 步骤1后待确认状态未设置！")
+            print("请检查 chatbot_policy.py 中是否调用了 set_pending_confirmation()")
+            exit(1)
+
+        print("\n✅ 步骤1成功，继续步骤2")
+
+        # 步骤2
+        print("\n步骤2：查询详情")
+        r2 = bot.chat("经济套餐有什么内容？", session_id=session_id)
+        state2 = bot.dst.get_state(session_id)
+
+        print(f"返回的 state: {r2['state']['pending_confirmation']}")
+        print(f"DST 中的 state: {state2.pending_confirmation}")
+        print(f"确认意图: {state2.confirmation_intent}")
+
+        if not state2.pending_confirmation:
+            print("\n❌ 步骤2后待确认状态丢失！")
+            print("请检查 dialog_state_tracker.py 的 track() 方法")
+            exit(1)
+
+        print("\n✅ 步骤2成功，继续步骤3")
+
+        # 步骤3
+        print("\n步骤3：确认")
+        r3 = bot.chat("确认办理", session_id=session_id)
+
+        print(f"响应: {r3['response']}")
+        print(f"成功: {r3.get('data', {}).get('success') if r3.get('data') else 'N/A'}")
+
+        if r3.get('data', {}).get('success'):
+            print("\n✅✅✅ 所有测试通过！")
+        else:
+            print("\n❌ 测试失败")
 

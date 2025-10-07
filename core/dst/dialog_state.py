@@ -86,10 +86,10 @@ class DialogState:
             "needs_clarification": self.needs_clarification,
             "missing_slots": self.missing_slots,
             "user_profile": self.user_profile,
+            # 🔥 必须包含这些字段
             "pending_confirmation": self.pending_confirmation,
             "confirmation_intent": self.confirmation_intent,
             "confirmation_slots": self.confirmation_slots,
-            # 🔥 确认时间戳需要转为字符串
             "confirmation_timestamp": self.confirmation_timestamp.isoformat() if self.confirmation_timestamp else None,
         }
 

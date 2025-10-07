@@ -1,5 +1,5 @@
 """
-对话状态跟踪器
+对话状态跟踪器（修复版）
 """
 from typing import Optional
 from datetime import datetime
@@ -27,7 +27,16 @@ class DialogStateTracker:
         logger.info("对话状态跟踪器初始化完成")
 
     def track(self, session_id: str, nlu_result) -> DialogState:
-        """跟踪对话状态"""
+        """
+        跟踪对话状态
+
+        Args:
+            session_id: 会话ID
+            nlu_result: NLU解析结果
+
+        Returns:
+            更新后的对话状态
+        """
         logger.info(f"[DST] 开始跟踪会话: {session_id}")
 
         # 1. 加载旧状态
@@ -51,19 +60,23 @@ class DialogStateTracker:
         new_intent = nlu_result.intent
         intent_changed = (old_state.current_intent != new_intent)
 
-        # 🔥 4.5. 如果意图改变且存在待确认状态，处理清理
+        if intent_changed:
+            logger.info(f"意图改变: {old_state.current_intent} → {new_intent}")
+
+        # 🔥 4.5. 如果意图改变且存在待确认状态，判断是否清除
         if intent_changed and old_state.pending_confirmation:
             should_clear = self._should_clear_pending_confirmation(
-                old_state.confirmation_intent,
+                old_state.confirmation_intent,  # 使用待确认的意图
                 new_intent
             )
 
             if should_clear:
-                logger.info(f"意图改变: {old_state.confirmation_intent} → {new_intent}, "
-                            f"清除待确认状态")
+                logger.info(f"意图改变到不相关领域: {old_state.confirmation_intent} → {new_intent}, "
+                           f"清除待确认状态")
                 old_state.clear_pending_confirmation()
             else:
-                logger.info(f"意图改变但相关联，保留待确认状态")
+                logger.info(f"意图改变但相关联: {old_state.confirmation_intent} → {new_intent}, "
+                           f"保留待确认状态")
 
         # 5. 更新槽位
         new_slots = self.slot_manager.fill_slots(
@@ -103,7 +116,12 @@ class DialogStateTracker:
             turn_count=old_state.turn_count,
             created_at=old_state.created_at,
             updated_at=datetime.now(),
-            user_profile=old_state.user_profile
+            user_profile=old_state.user_profile,
+            # 🔥 保留待确认状态（如果没被清除）
+            pending_confirmation=old_state.pending_confirmation,
+            confirmation_intent=old_state.confirmation_intent,
+            confirmation_slots=old_state.confirmation_slots,
+            confirmation_timestamp=old_state.confirmation_timestamp
         )
 
         # 9. 验证槽位完整性
@@ -117,9 +135,58 @@ class DialogStateTracker:
         self.state_store.save(session_id, new_state)
 
         logger.info(f"[DST] 状态跟踪完成: turn={new_state.turn_count}, "
-                    f"需要澄清={new_state.needs_clarification}")
+                    f"需要澄清={new_state.needs_clarification}, "
+                    f"待确认={new_state.pending_confirmation}")
 
         return new_state
+
+    def _should_clear_pending_confirmation(self,
+                                          old_intent: str,
+                                          new_intent: str) -> bool:
+        """
+        判断是否应该清除待确认状态
+
+        策略：
+        1. 如果新意图是 chat/闲聊，保留（可能只是随口问一句）
+        2. 如果新旧意图属于同一业务领域，保留
+        3. 其他情况，清除
+
+        Args:
+            old_intent: 旧意图（待确认的意图）
+            new_intent: 新意图
+
+        Returns:
+            bool: 是否应该清除
+        """
+        # 规则1: chat/闲聊不清除
+        if new_intent in ["chat", "greeting", "thanks"]:
+            return False
+
+        # 规则2: 同业务领域不清除
+        intent_domains = {
+            "package": ["query_packages", "query_package_detail",
+                       "change_package", "query_current_package"],
+            "usage": ["query_usage", "query_balance"],
+            "consult": ["business_consultation"]
+        }
+
+        old_domain = self._get_intent_domain(old_intent, intent_domains)
+        new_domain = self._get_intent_domain(new_intent, intent_domains)
+
+        if old_domain and old_domain == new_domain:
+            logger.debug(f"意图属于同一领域: {old_domain}")
+            return False  # 同领域，保留
+
+        # 规则3: 其他情况清除
+        logger.debug(f"意图跨领域: {old_domain} → {new_domain}")
+        return True
+
+    def _get_intent_domain(self, intent: str, domains: dict) -> Optional[str]:
+        """获取意图所属领域"""
+        for domain, intents in domains.items():
+            if intent in intents:
+                return domain
+        return None
 
     def _validate_slots(self, state: DialogState):
         """验证槽位完整性"""
@@ -189,49 +256,3 @@ class DialogStateTracker:
         self.state_store.save(session_id, state)
 
         logger.info(f"更新用户信息: session={session_id}, phone={phone}, name={name}")
-
-    def _should_clear_pending_confirmation(self,
-                                           old_intent: str,
-                                           new_intent: str) -> bool:
-        """
-        判断是否应该清除待确认状态
-
-        策略：
-        1. 如果新意图是 chat/闲聊，保留（可能只是随口问一句）
-        2. 如果新旧意图属于同一业务领域，保留
-        3. 其他情况，清除
-
-        Args:
-            old_intent: 旧意图
-            new_intent: 新意图
-
-        Returns:
-            bool: 是否应该清除
-        """
-        # 规则1: chat/闲聊不清除
-        if new_intent in ["chat", "greeting", "thanks"]:
-            return False
-
-        # 规则2: 同业务领域不清除
-        intent_domains = {
-            "package": ["query_packages", "query_package_detail",
-                        "change_package", "query_current_package"],
-            "usage": ["query_usage", "query_balance"],
-            "consult": ["business_consultation"]
-        }
-
-        old_domain = self._get_intent_domain(old_intent, intent_domains)
-        new_domain = self._get_intent_domain(new_intent, intent_domains)
-
-        if old_domain and old_domain == new_domain:
-            return False  # 同领域，保留
-
-        # 规则3: 其他情况清除
-        return True
-
-    def _get_intent_domain(self, intent: str, domains: dict) -> Optional[str]:
-        """获取意图所属领域"""
-        for domain, intents in domains.items():
-            if intent in intents:
-                return domain
-        return None
