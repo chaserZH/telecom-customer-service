@@ -1,5 +1,5 @@
 """
-NLU引擎核心实现
+改进的NLU引擎 - 集成规则前置 + LLM + 后验证
 """
 import json
 import re
@@ -11,8 +11,10 @@ from openai.types.chat import ChatCompletionSystemMessageParam, ChatCompletionUs
 
 from config import settings, SYSTEM_PROMPT, SLOT_QUESTIONS
 from utils import logger
-# 改为从当前包直接导入，而不是从core包导入
 from .function_definitions import FUNCTION_DEFINITIONS, get_required_params
+from .rule_preprocessor import RulePreprocessor
+from .prompt_templates import OPTIMIZED_SYSTEM_PROMPT
+from .result_validator import ResultValidator
 
 
 @dataclass
@@ -26,10 +28,11 @@ class NLUResult:
     clarification_message: Optional[str] = None
     missing_slots: List[str] = field(default_factory=list)
     raw_response: Optional[str] = None
+    source: str = "llm"  # rule / llm / corrected
 
 
 class NLUEngine:
-    """NLU引擎 - 支持DeepSeek"""
+    """改进的NLU引擎"""
 
     def __init__(self):
         """初始化NLU引擎"""
@@ -60,14 +63,22 @@ class NLUEngine:
 
         else:
             raise ValueError(f"不支持的LLM提供商: {self.provider}")
+        # 🆕 新增组件
+        self.rule_preprocessor = RulePreprocessor()      # 规则前置
+        self.result_validator = ResultValidator()        # 后验证
 
         self.sessions = {}
+        logger.info(f"✓ NLU引擎初始化完成: {self.provider} ({self.model})")
+        logger.info("✓ 规则前置 + LLM兜底 + 后验证架构已启用")
 
     def understand(self,
                    user_input: str,
                    session_id: str,
                    user_phone: Optional[str] = None) -> NLUResult:
-        """理解用户输入"""
+        """
+        理解用户输入 - 三阶段处理
+        流程：规则前置 → LLM理解 → 后验证
+        """
         logger.info(f"[{session_id}] 开始NLU理解: {user_input}")
 
         try:
@@ -80,28 +91,85 @@ class NLUEngine:
             if user_phone:
                 context["user_phone"] = user_phone
 
-            # 3. 构建消息
-            messages = self._build_messages(processed_text, context)
-            logger.info(f"请求模型message={messages}")
-            # 4. 调用DeepSeek API
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=messages,
-                tools=FUNCTION_DEFINITIONS,
-                tool_choice="required",  # ⭐ 改为auto
-                temperature=0.2,  # 降低随机性
-                top_p=0.9,
-                frequency_penalty=0.2  # 避免重复
+            # 🆕 3. 阶段1：规则前置（80%场景）
+            rule_result = self.rule_preprocessor.preprocess(processed_text, context)
+            if rule_result:
+                # 规则命中，构建NLUResult
+                nlu_result = NLUResult(
+                    intent=rule_result["intent"],
+                    function_name=rule_result["intent"],
+                    parameters=rule_result["parameters"],
+                    confidence=rule_result["confidence"],
+                    source="rule"
+                )
+
+                logger.info(f"[{session_id}] ✓ 规则命中: {rule_result['rule_name']}")
+            else:
+                # 🆕 4. 阶段2：LLM理解（20%场景）
+                logger.info(f"[{session_id}] 规则未命中，使用LLM")
+
+                # 构建消息（使用优化后的Prompt）
+                messages = self._build_messages(processed_text, context)
+                logger.info(f"[{session_id}] 规则未命中，使用LLM，message: {messages}")
+                # 调用LLM
+                response = self.client.chat.completions.create(
+                    model=self.model,
+                    messages=messages,
+                    tools=FUNCTION_DEFINITIONS,
+                    tool_choice="required",
+                    temperature=0.2,
+                    top_p=0.9
+                )
+
+                # 解析响应
+                nlu_result = self._parse_response(response, context, processed_text)
+                nlu_result.source = "llm"
+
+            # 🆕 5. 阶段3：后验证（规则二次验证）
+            validation = self.result_validator.validate(
+                nlu_result.intent,
+                nlu_result.parameters,
+                user_input,
+                context
             )
 
-            # 5. 解析响应
-            nlu_result = self._parse_response(response, context, processed_text)
+            # 应用验证结果
+            if not validation["valid"] or validation["warnings"]:
+                logger.warning(
+                    f"[{session_id}] 后验证发现问题: "
+                    f"valid={validation['valid']}, "
+                    f"warnings={validation['warnings']}"
+                )
 
-            # 6. 更新会话
+                # 修正意图
+                if validation["corrected_intent"] != nlu_result.intent:
+                    logger.info(
+                        f"[{session_id}] 意图修正: "
+                        f"{nlu_result.intent} → {validation['corrected_intent']}"
+                    )
+                    nlu_result.intent = validation["corrected_intent"]
+                    nlu_result.function_name = validation["corrected_intent"]
+                    nlu_result.source = "corrected"
+
+                # 修正参数
+                nlu_result.parameters = validation["corrected_params"]
+                nlu_result.confidence = validation["confidence"]
+
+            # 6. 验证参数完整性
+            self._validate_and_fill_slots(nlu_result, context)
+
+            # 7. 更新会话
             self._update_session(session_id, user_input, nlu_result, context)
 
-            logger.info(f"[{session_id}] NLU完成: intent={nlu_result.intent}")
+            logger.info(
+                f"[{session_id}] NLU完成: "
+                f"intent={nlu_result.intent}, "
+                f"source={nlu_result.source}, "
+                f"confidence={nlu_result.confidence:.2f}"
+            )
+
             return nlu_result
+
 
         except Exception as e:
             logger.error(f"[{session_id}] NLU异常: {str(e)}")
@@ -111,6 +179,33 @@ class NLUEngine:
                 requires_clarification=True,
                 clarification_message=f"抱歉,处理出现问题: {str(e)}"
             )
+
+    def _validate_and_fill_slots(self, nlu_result: NLUResult, context: Dict):
+        """验证并填充槽位"""
+        if not nlu_result.function_name:
+            return
+
+        # 获取必填参数
+        required_slots = get_required_params(nlu_result.function_name)
+
+        # 检查缺失
+        missing_slots = []
+        for slot in required_slots:
+            if slot not in nlu_result.parameters or not nlu_result.parameters[slot]:
+                # 尝试从上下文补全
+                if slot == "phone" and context.get("user_phone"):
+                    nlu_result.parameters[slot] = context["user_phone"]
+                elif slot in context.get("slot_values", {}):
+                    nlu_result.parameters[slot] = context["slot_values"][slot]
+                else:
+                    missing_slots.append(slot)
+
+        if missing_slots:
+            nlu_result.requires_clarification = True
+            nlu_result.clarification_message = self._get_slot_question(missing_slots[0])
+            nlu_result.missing_slots = missing_slots
+
+
 
     def _preprocess(self, text: str) -> str:
         """文本预处理"""
@@ -131,32 +226,24 @@ class NLUEngine:
             }
         return self.sessions[session_id]
 
-    # ========== 3️⃣ 改进消息构建（精准上下文版）==========
-    def _build_messages(self, user_input: str, context: Dict) -> List[Any]:
-        """
-        构建消息 - 精准上下文传递
 
-        策略：
-        1. 基础：System Prompt + 当前输入
-        2. 槽位填充场景：添加精简的任务上下文
-        3. 避免：完整历史对话（避免参数污染）
-        """
+    def _build_messages(self, user_input: str, context: Dict) -> List[Any]:
+        """构建消息 - 使用优化后的Prompt"""
         messages = []
 
-        # 1. 动态System Prompt
-        system_content = self._build_dynamic_system_prompt(context)
+        # 1. 使用优化后的System Prompt
+        optimized_system_prompt = self._build_dynamic_system_prompt(context)
         messages.append(
             ChatCompletionSystemMessageParam(
                 role="system",
-                content=system_content
+                content=optimized_system_prompt  # 🆕 优化后的Prompt
             )
         )
 
-        # 2. 🔥 上下文传递（分场景）
+        # 2. 上下文（如果有）
         is_slot_filling = self._is_slot_filling_state(context)
 
         if is_slot_filling:
-            # 场景A: 槽位填充 - 详细任务上下文（原有逻辑）
             task_context = self._build_task_context(context)
             messages.append(
                 ChatCompletionUserMessageParam(
@@ -165,7 +252,6 @@ class NLUEngine:
                 )
             )
         else:
-            # 场景B: 非槽位填充 - 简洁上下文提示（新增逻辑）⭐
             recent_context = self._build_recent_context(context)
             if recent_context:
                 messages.append(
@@ -356,7 +442,7 @@ class NLUEngine:
 
         根据是否在槽位填充状态，调整提示词
         """
-        base_prompt = SYSTEM_PROMPT
+        base_prompt = OPTIMIZED_SYSTEM_PROMPT
 
         if self._is_slot_filling_state(context):
             # 槽位填充场景：添加特殊指示
