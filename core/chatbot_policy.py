@@ -366,7 +366,14 @@ class TelecomChatbotPolicy:
 
     def _is_confirmation_word(self, text: str) -> bool:
         """
-        判断是否为确认词（改进版：避免误判业务意图）
+        判断是否为确认词(优化版:避免误判咨询意图)
+
+        策略:
+        1. 先排除:包含咨询/疑问词 → 不是确认
+        2. 再排除:包含业务实体(套餐名/手机号) → 不是确认
+        3. 精确匹配:纯确认词
+        4. 组合匹配:确认+办理等组合
+        5. 兜底判断:短句+办理(非常严格)
 
         Args:
             text: 用户输入
@@ -374,54 +381,90 @@ class TelecomChatbotPolicy:
         Returns:
             bool: 是否为确认
         """
+        import re
         text_lower = text.lower().strip()
 
-        # 🔥 规则1：如果包含套餐名称，不是确认词（是业务意图）
+        # ========== 阶段1:优先排除咨询意图 ==========
+        # 🆕 关键优化:如果包含咨询/疑问词,一定不是确认
+        consultation_keywords = [
+            # 疑问词
+            "怎么", "如何", "怎样", "怎么样",
+            # 流程类
+            "流程", "步骤", "手续", "过程", "方法",
+            # 条件类
+            "条件", "要求", "需要什么", "要什么", "准备什么",
+            # 咨询类
+            "咨询", "了解", "问一下", "请问", "想问",
+            # 说明类
+            "说明", "介绍", "讲解", "告诉我"
+        ]
+
+        for keyword in consultation_keywords:
+            if keyword in text_lower:
+                logger.info(f"⛔ 包含咨询词'{keyword}' → 不是确认词: '{text}'")
+                return False
+
+        # ========== 阶段2:排除业务实体 ==========
+
+        # 排除1:包含套餐名称 → 业务意图
         package_names = ["经济套餐", "畅游套餐", "无限套餐", "校园套餐"]
         for pkg in package_names:
             if pkg in text:
-                logger.debug(f"包含套餐名称'{pkg}'，不是确认词")
+                logger.debug(f"⛔ 包含套餐名称'{pkg}' → 不是确认词")
                 return False
 
-        # 🔥 规则2：如果包含电话号码，不是确认词（是业务意图）
-        import re
+        # 排除2:包含手机号 → 业务意图
         if re.search(r'1[3-9]\d{9}', text):
-            logger.debug(f"包含手机号，不是确认词")
+            logger.debug(f"⛔ 包含手机号 → 不是确认词")
             return False
 
-        # 🔥 规则3：检查确认词（精确匹配或组合词）
-        # 纯确认词（高优先级，完全匹配）
+        # ========== 阶段3:精确匹配纯确认词 ==========
+
+        # 去除标点后的文本
+        clean_text = re.sub(r'[,。!?、\s]+', '', text_lower)
+
+        # 纯确认词(完全匹配)
         exact_confirmation_words = [
             "确认", "确定", "是的", "是", "对", "好的", "可以",
-            "ok", "yes", "嗯", "行", "同意", "没问题"
+            "ok", "yes", "嗯", "行", "同意", "没问题", "好"
         ]
 
-        # 完全匹配（去除标点后）
-        clean_text = re.sub(r'[，。！？、\s]+', '', text_lower)
         if clean_text in exact_confirmation_words:
-            logger.info(f"精确匹配确认词: '{text}'")
+            logger.info(f"✅ 精确匹配确认词: '{text}'")
             return True
 
-        # 组合确认词（包含即可）
+        # ========== 阶段4:组合确认词 ==========
+
         combination_confirmation_words = [
             "确认办理", "确定办理", "确认办", "好的办理",
             "可以办理", "同意办理", "办吧", "办理吧",
-            "就这个", "就办这个", "就要这个", "要这个"
+            "就这个", "就办这个", "就要这个", "要这个",
+            "就办", "就要", "这个吧"
         ]
 
         for word in combination_confirmation_words:
             if word in text_lower:
-                logger.info(f"识别为确认词: '{text}' 包含 '{word}'")
+                logger.info(f"✅ 识别为确认词: '{text}' 包含组合词 '{word}'")
                 return True
 
-        # 🔥 规则4：特殊处理"办理"
-        # 仅当：
-        # - 单独的"办理"
-        # - 或者很短的句子（<5个字）中包含"办理"
-        if "办理" in text_lower and len(text) <= 5:
-            logger.info(f"识别为确认词: '{text}' 短句包含办理")
+        # ========== 阶段5:短句+办理(非常严格) ==========
+        # 🔥 关键优化:只允许≤3个字的"办理"
+        # "办理" (2字) ✅
+        # "办" (1字) ✅
+        # "办理吧" (3字) ✅
+        # "办理流程" (4字) ❌ → 阶段1已排除
+        # "我要办理" (4字) ❌
+
+        if "办理" in text_lower and len(text) <= 3:
+            logger.info(f"✅ 识别为确认词: '{text}' (短句+办理)")
             return True
 
+        # 单独的"办"
+        if clean_text == "办":
+            logger.info(f"✅ 识别为确认词: '{text}' = '办'")
+            return True
+
+        logger.debug(f"❌ 不是确认词: '{text}'")
         return False
 
     def _is_cancellation_word(self, text: str) -> bool:
