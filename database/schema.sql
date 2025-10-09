@@ -34,7 +34,6 @@ CREATE TABLE IF NOT EXISTS t_user (
     status TINYINT DEFAULT 1 COMMENT '状态: 1=正常, 0=停机',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (current_package_id) REFERENCES packages(id),
     INDEX idx_package (current_package_id),
     INDEX idx_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户信息表';
